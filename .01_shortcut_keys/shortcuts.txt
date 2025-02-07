@@ -1,0 +1,37 @@
+# Show project files (excludes node_modules, .git, dist)
+find . -type f -not \( -path "./node_modules/*" -o -path "./.git/*" -o -path "./dist/*" -o -path "./.next/*" \)
+
+# Format code
+npm run format
+
+# Check formatting
+npm run format:check
+
+# Run ESLint
+npm run lint
+
+# Fix ESLint issues
+npm run lint:fix
+
+# TypeScript check
+npm run type-check
+npx tsc --noEmit  # Alternative
+
+# SonarQube scan
+npm run sonar
+npx sonar-scanner  # Alternative
+
+# Dev server
+npm run dev
+
+# Build
+npm run build
+
+# Production server
+npm run start
+
+# All checks
+npm run ci
+
+# Typical workflow
+npm run format && npm run lint:fix && npm run type-check

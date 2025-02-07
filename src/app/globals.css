@@ -5,17 +5,401 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --shimmer-hue-1: 195deg;
+  --shimmer-hue-2: 207deg;
+  --shimmer-hue-3: 220deg;
+  --shimmer-sat-1: 85%;
+  --shimmer-sat-2: 90%;
+  --shimmer-sat-3: 75%;
+  --shimmer-lit-1: 85%;
+  --shimmer-lit-2: 70%;
+  --shimmer-lit-3: 80%;
+  --glow-hue: 202deg;
+  --shadow-hue: 180deg;
+  --spring-duration: 1.33s;
+  --spring-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --gradient-start: rgba(24, 24, 27, 0); /* Transparent black */
+  --gradient-end: rgba(24, 24, 27, 1); /* Opaque black */
+  --glow-hue: 222deg;
+  --shadow-hue: 180deg;
+  --bg: rgb(27, 23, 36);
+  --card-height: 65vh;
+  --card-width: calc(var(--card-height) / 1.5);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --shimmer-hue-1: 195deg;
+    --shimmer-hue-2: 207deg;
+    --shimmer-hue-3: 220deg;
+    --shimmer-sat-1: 95%;
+    --shimmer-sat-2: 100%;
+    --shimmer-sat-3: 85%;
+    --shimmer-lit-1: 91%;
+    --shimmer-lit-2: 86%;
+    --shimmer-lit-3: 89%;
+    --gradient-start: rgba(255, 255, 255, 0); /* Transparent white */
+    --gradient-end: rgba(255, 255, 255, 1); /* Opaque white */
   }
 }
 
+.input-gradient {
+  @apply bg-gradient-to-r from-transparent to-[#18181bcc] dark:bg-gradient-to-r dark:from-transparent dark:to-white;
+}
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@property --mask {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 33deg;
+}
+
+@property --rotate {
+  syntax: '<angle>';
+  initial-value: 132deg;
+  inherits: false;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  0% {
+    --rotate: 0deg;
+  }
+  100% {
+    --rotate: 360deg;
+  }
+}
+
+@keyframes text {
+  0% {
+    background-position: 100% center;
+  }
+  100% {
+    background-position: -100% center;
+  }
+}
+
+@keyframes wipe {
+  0% {
+    mask-position: 200% center;
+  }
+  100% {
+    mask-position: 0% center;
+  }
+}
+
+.shimmer-button {
+  color: var(--background);
+  font-weight: 600;
+  font-size: 1.2em;
+  background-image: linear-gradient(
+    315deg,
+    hsl(var(--shimmer-hue-1), var(--shimmer-sat-1), var(--shimmer-lit-1)) 0%,
+    hsl(var(--shimmer-hue-2), var(--shimmer-sat-2), var(--shimmer-lit-2)) 47%,
+    hsl(var(--shimmer-hue-3), var(--shimmer-sat-3), var(--shimmer-lit-3)) 100%
+  );
+  padding: 0.8em 1.4em;
+  position: relative;
+  isolation: isolate;
+  box-shadow: 0 2px 3px 1px hsl(var(--glow-hue) 50% 20% / 50%);
+  border: none;
+  outline: none;
+  border-radius: 0.66em;
+  scale: 1;
+  transition: all var(--spring-duration) var(--spring-easing);
+}
+
+.shimmer {
+  position: absolute;
+  inset: -40px;
+  border-radius: inherit;
+  mix-blend-mode: plus-lighter;
+  pointer-events: none;
+}
+
+.shimmer::before,
+.shimmer::after {
+  transition: all 0.5s ease;
+  opacity: 0;
+  content: '';
+  border-radius: inherit;
+  position: absolute;
+  inset: 40px;
+}
+
+.shimmer::before {
+  box-shadow:
+    0 0 3px 2px hsl(var(--shimmer-hue-1) 20% 95%),
+    0 0 7px 4px hsl(var(--shimmer-hue-1) 20% 80%),
+    0 0 13px 8px hsl(var(--shimmer-hue-2) 40% 60%),
+    0 0 22px 6px hsl(var(--shimmer-hue-2) 20% 40%);
+  z-index: -1;
+}
+
+.shimmer::after {
+  box-shadow:
+    inset 0 0 0 1px hsl(var(--shimmer-hue-2) 70% 95%),
+    inset 0 0 3px 1px hsl(var(--shimmer-hue-2) 100% 80%),
+    inset 0 0 9px 1px hsl(var(--shimmer-hue-2) 100% 70%);
+  z-index: 2;
+}
+
+.shimmer-button[disabled] {
+  background: rgb(76 76 92);
+  background-image: none;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.shimmer-button:hover:not(:active):not([disabled]) {
+  scale: 1.1;
+  transition-duration: calc(var(--spring-duration) * 0.5);
+}
+
+.shimmer-button:active:not([disabled]) {
+  scale: 1.05;
+  transition-duration: calc(var(--spring-duration) * 0.5);
+}
+
+.shimmer-button:focus .shimmer,
+.shimmer-button:active .shimmer {
+  animation-play-state: paused !important;
+  mask-image: none !important;
+}
+
+.shimmer-button:hover:not([disabled]) .shimmer::before,
+.shimmer-button:hover:not([disabled]) .shimmer::after {
+  opacity: 1;
+}
+
+.shimmer-button .text {
+  color: #ffffff;
+  background-clip: text;
+  -webkit-background-clip: text;
+  background-color: var(--background);
+  background-image: linear-gradient(
+    120deg,
+    transparent,
+    hsla(var(--shimmer-hue-1), 100%, 80%, 0.66) 40%,
+    hsla(var(--shimmer-hue-2), 100%, 90%, 0.9) 50%,
+    transparent 52%
+  );
+  background-size: 300% 300%;
+  background-position: center 200%;
+}
+
+.shimmer-button:not([disabled]):hover .text {
+  animation: text 0.66s ease-in-out 1;
+}
+
+.shimmer-button:not([disabled]) .shimmer {
+  mask-image: conic-gradient(
+    from var(--mask, 0deg),
+    transparent 0%,
+    transparent 10%,
+    black 36%,
+    black 45%,
+    transparent 50%,
+    transparent 60%,
+    black 85%,
+    black 95%,
+    transparent 100%
+  );
+  mask-size: cover;
+  animation: spin 3s linear infinite both -0.5s;
+}
+
+.shimmer-button:not([disabled])[data-effect='wipe'] .shimmer {
+  mask-image: linear-gradient(90deg, transparent 20%, black 88%, transparent 90%);
+  mask-size: 200% 200%;
+  animation: wipe 1.5s linear infinite both -0.5s;
+}
+
+.shimmer-button:focus-visible {
+  outline: 2px solid hsl(var(--shimmer-hue-2) 100% 70%);
+  outline-offset: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .shimmer-button {
+    box-shadow: 0 2px 3px 1px hsl(var(--glow-hue) 50% 10% / 50%);
+  }
+
+  .shimmer-button .text {
+    background-color: rgb(15, 15, 15);
+  }
+}
+
+@keyframes meteor-animation {
+  0% {
+    transform: translateY(-100px) translateX(0) var(--rotate);
+    opacity: var(--opacity-start);
+  }
+  15% {
+    opacity: var(--opacity-start);
+  }
+  90% {
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(100vh) translateX(100vw) var(--rotate);
+    opacity: 0;
+  }
+}
+
+.animate-meteor {
+  --opacity-start: 1;
+  --rotate: rotate(35deg);
+  position: absolute;
+  animation: meteor-animation linear forwards;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: var(--opacity-start);
+    transform: scale(1);
+  }
+  50% {
+    opacity: calc(var(--opacity-start) * 0.3);
+    transform: scale(0.8);
+  }
+}
+
+.scrollbar-thin {
+  overflow-y: auto; /* Enable scrolling */
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+  -ms-overflow-style: none; /* Hide scrollbar for Internet Explorer/Edge */
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome, Safari, and Opera */
+}
+
+.trend {
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+  opacity: 1;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.card {
+  background: rgba(25, 28, 41, 0.95);
+  position: relative;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transform-origin: center center;
+  will-change: transform, opacity, box-shadow;
+}
+
+/* Dark mode using Tailwind's dark: class */
+:is(.dark .card) {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Success state with animation */
+.card.success {
+  border-color: rgba(11, 191, 17, 0.3);
+  box-shadow: 0 0 20px rgba(11, 191, 17, 0.1);
+  animation: successPulse 2s infinite;
+}
+
+/* Error state with animation */
+.card.error {
+  border-color: rgba(220, 38, 38, 0.3);
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.1);
+  animation: errorPulse 2s infinite;
+}
+
+@keyframes successPulse {
+  0% {
+    box-shadow: 0 0 20px rgba(11, 191, 17, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(11, 191, 17, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(11, 191, 17, 0.1);
+  }
+}
+
+@keyframes errorPulse {
+  0% {
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(220, 38, 38, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.1);
+  }
+}
+
+@keyframes spin {
+  0% {
+    --rotate: 0deg;
+  }
+  100% {
+    --rotate: 360deg;
+  }
+}
+
+/* Hide scrollbar but keep functionality */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome/Safari */
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ensure proper scrolling behavior for all containers */
+html,
+body {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Add smooth scrolling */
+html {
+  scroll-behavior: smooth;
 }
