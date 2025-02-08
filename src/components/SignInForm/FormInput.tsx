@@ -107,8 +107,8 @@ export function FormInput({
           exit={{ opacity: 0, height: 0 }}
           className="mt-2 space-y-2"
         >
-          {passwordChecks.map((req, index) => (
-            <div key={index} className="flex items-center space-x-2">
+          {passwordChecks.map((req) => (
+            <div key={req.label} className="flex items-center space-x-2">
               {req.satisfied ? (
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
               ) : (

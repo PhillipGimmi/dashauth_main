@@ -289,17 +289,7 @@ const VerificationSteps: React.FC<{
                     {status === 'pending' && (
                       <div className="h-5 w-5 rounded-full border-2 border-zinc-300" />
                     )}
-                    <span
-                      className={
-                        status === 'current'
-                          ? 'font-medium'
-                          : status === 'error'
-                            ? 'text-red-500'
-                            : status === 'complete'
-                              ? 'text-green-500'
-                              : 'text-zinc-500'
-                      }
-                    >
+                    <span className={getStatusClassName(status)}>
                       {label}
                     </span>
                   </motion.div>
@@ -364,8 +354,11 @@ const VerificationSteps: React.FC<{
                   </div>
                 )}
               </div>
-              {details.attempts?.map((attempt, i) => (
-                <div key={i} className="ml-2 text-zinc-100 dark:text-zinc-900">
+              {details.attempts?.map((attempt) => (
+                <div 
+                  key={`attempt-${attempt.type}-${attempt.domain}`} 
+                  className="ml-2 text-zinc-100 dark:text-zinc-900"
+                >
                   <div>
                     <strong>{attempt.type}</strong> lookup for {attempt.domain}:
                   </div>
@@ -373,8 +366,11 @@ const VerificationSteps: React.FC<{
                     <div className="ml-4 text-green-500">Successful</div>
                   ) : (
                     <div className="ml-4">
-                      {attempt.errors?.map((err, j) => (
-                        <div key={j} className="text-red-500">
+                      {attempt.errors?.map((err) => (
+                        <div 
+                          key={`error-${err.provider}-${err.error}`} 
+                          className="text-red-500"
+                        >
                           {err.provider}: {err.error}
                         </div>
                       ))}
@@ -393,14 +389,14 @@ const VerificationSteps: React.FC<{
 const AnimatedText = ({ text }: { text: string }) => {
   return (
     <span className="inline-flex">
-      {text.split('').map((char, i) => (
+      {text.split('').map((char, index) => (
         <motion.span
-          key={i}
+          key={`char-${index}-${char}`}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
             duration: 0.3,
-            delay: i * 0.05,
+            delay: index * 0.05,
             ease: [0.33, 1, 0.68, 1],
           }}
           className="font-medium text-white dark:text-black"
@@ -443,6 +439,135 @@ const GlowingCard: React.FC<{
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY = 5000; // 5 seconds
 
+const ScaleMotion: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className }) => (
+  <motion.div
+    initial={{ scale: 0 }}
+    animate={{ scale: 1 }}
+    exit={{ scale: 0 }}
+    className={className}
+  >
+    {children}
+  </motion.div>
+);
+
+// First, let's create a reusable copy button component to remove duplication
+const CopyButton: React.FC<{ 
+  onCopy: () => void;
+  isCopied: boolean;
+}> = ({ onCopy, isCopied }) => (
+  <button
+    onClick={onCopy}
+    className="group rounded-lg p-2 transition-all duration-200 hover:bg-zinc-700/50 dark:hover:bg-zinc-300/50"
+  >
+    {isCopied ? (
+      <ScaleMotion className="text-green-500">
+        <Check className="h-5 w-5" />
+      </ScaleMotion>
+    ) : (
+      <ScaleMotion>
+        <Copy className="h-5 w-5 text-zinc-400 transition-colors group-hover:text-white dark:text-gray-600 dark:group-hover:text-black" />
+      </ScaleMotion>
+    )}
+  </button>
+);
+
+// Helper function to get verification status text
+const getVerificationStatusText = (
+  step: VerificationStep, 
+  isVerified: boolean
+): string => {
+  if (step === 'complete') {
+    return isVerified ? 'Domain Verified!' : 'Verification Failed';
+  }
+  if (step === 'error') {
+    return 'Verification Failed';
+  }
+  return 'Verifying Domain...';
+};
+
+// Helper function to get verification message
+const getVerificationMessage = (
+  step: VerificationStep,
+  isVerified: boolean,
+  domain: string,
+  error?: string
+): string => {
+  switch (step) {
+    case 'fetching':
+      return 'Fetching DNS records...';
+    case 'checking_txt':
+      return 'Checking for TXT records...';
+    case 'verifying_match':
+      return 'Verifying record matches...';
+    case 'complete':
+      return isVerified
+        ? `Successfully verified domain ownership for ${domain}`
+        : 'Verification failed. Please check the details below.';
+    case 'error':
+      return error ?? 'An error occurred during verification';
+    default:
+      return 'Verifying domain...';
+  }
+};
+
+// For FAQ items, create a unique ID generator
+const createFaqId = (question: string): string => {
+  return `faq-${question.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+};
+
+// For provider items, create a unique ID generator
+const createProviderId = (category: string, name: string): string => {
+  return `provider-${category.toLowerCase()}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+};
+
+const VerificationButton: React.FC<{
+  verificationStep: VerificationStep;
+  verificationData: any;
+  onVerify: () => void;
+  onContinue: () => void;
+}> = ({ verificationStep, verificationData, onVerify, onContinue }) => {
+  const isVerifying = verificationStep !== 'idle' && verificationStep !== 'error';
+  const isComplete = verificationStep === 'complete' && verificationData.status === 'verified';
+
+  if (isComplete) {
+    return (
+      <button
+        onClick={onContinue}
+        className="relative z-0 flex w-full items-center justify-center overflow-hidden whitespace-nowrap rounded-md border-[1px]
+        border-zinc-800 px-4 py-2.5 font-medium text-neutral-300 transition-all duration-300 before:absolute before:inset-0
+        before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-white
+        before:transition-transform before:duration-1000 before:content-['']
+        hover:scale-105 hover:border-white hover:text-neutral-900 hover:before:translate-y-[0%]
+        active:scale-100 dark:border-gray-300 dark:text-gray-700 dark:before:bg-black dark:hover:border-black
+        dark:hover:text-white"
+      >
+        <span className="relative z-10">Continue</span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={onVerify}
+      disabled={isVerifying}
+      className="relative z-0 flex w-full items-center justify-center overflow-hidden whitespace-nowrap rounded-md border-[1px]
+      border-zinc-800 px-4 py-2.5 font-medium text-neutral-300 transition-all duration-300 before:absolute before:inset-0
+      before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-white
+      before:transition-transform before:duration-1000 before:content-['']
+      hover:scale-105 hover:border-white hover:text-neutral-900 hover:before:translate-y-[0%]
+      active:scale-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-300 dark:text-gray-700
+      dark:before:bg-black dark:hover:border-black dark:hover:text-white"
+    >
+      <span className="relative z-10">
+        {isVerifying ? 'Verifying...' : 'Verify Now'}
+      </span>
+    </button>
+  );
+};
+
 export const DomainVerificationStep: React.FC<DomainVerificationStepProps> = ({
   domain,
   verificationData,
@@ -481,183 +606,184 @@ export const DomainVerificationStep: React.FC<DomainVerificationStepProps> = ({
 
   const handleVerifyClick = async (): Promise<void> => {
     try {
-      setVerificationStep('fetching');
+      initializeVerification();
+      const data = await performDnsVerification();
+      await processVerificationResult(data);
+    } catch (error) {
+      handleVerificationError(error);
+    }
+  };
+
+  const initializeVerification = () => {
+    setVerificationStep('fetching');
+    setVerificationError(undefined);
+    setVerificationDetails(undefined);
+    setVerificationResponse(undefined);
+  };
+
+  const performDnsVerification = async (): Promise<DnsVerifyResponse> => {
+    console.log('🔍 Step 1: Fetching DNS records for:', domain);
+    const data = await verifyWithRetry(0);
+    console.log('📊 DNS Response:', data);
+    setVerificationResponse(data);
+    return data;
+  };
+
+  const verifyWithRetry = async (attempt: number, retryCount = 0): Promise<DnsVerifyResponse> => {
+    try {
+      const response = await fetch(`/api/domains/verify?domain=${domain}`);
+      const data: DnsVerifyResponse = await response.json();
+      
+      if (!data.success && shouldRetry(data, retryCount)) {
+        return await handleRetry(attempt, retryCount);
+      }
+      
+      return data;
+    } catch (error) {
+      if (attempt < MAX_RETRIES) {
+        return await handleRetry(attempt, retryCount);
+      }
+      throw error;
+    }
+  };
+
+  const shouldRetry = (data: DnsVerifyResponse, retryCount: number): boolean => {
+    return Boolean(data.details?.attempts?.some((a) => a.success)) && retryCount < MAX_RETRIES;
+  };
+
+  const handleRetry = async (attempt: number, retryCount: number): Promise<DnsVerifyResponse> => {
+    const delay = INITIAL_RETRY_DELAY * Math.pow(2, attempt);
+    console.log(`Retry attempt ${attempt + 1} after ${delay}ms`);
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    return verifyWithRetry(attempt + 1, retryCount + 1);
+  };
+
+  const processVerificationResult = async (data: DnsVerifyResponse) => {
+    if (!data.success) {
+      handleDnsLookupFailure(data);
+      return;
+    }
+
+    if (!await validateTxtRecords(data)) {
+      return;
+    }
+
+    await verifyTokenMatch(data);
+  };
+
+  const validateTxtRecords = async (data: DnsVerifyResponse): Promise<boolean> => {
+    setVerificationStep('checking_txt');
+    if (!data.records || data.records.length === 0) {
+      handleMissingTxtRecords();
+      return false;
+    }
+    
+    setVerificationStep('verifying_match');
+    const dashAuthRecord = data.records.find(
+      (record) => record.name.includes('_dashauth') && record.type === 'TXT'
+    );
+
+    if (!dashAuthRecord) {
+      handleMissingDashAuthRecord();
+      return false;
+    }
+
+    return true;
+  };
+
+  const verifyTokenMatch = async (data: DnsVerifyResponse) => {
+    const dashAuthRecord = data.records.find(
+      (record) => record.name.includes('_dashauth') && record.type === 'TXT'
+    );
+    const expectedToken = verificationData.verification_token;
+    const foundToken = dashAuthRecord!.data.trim();
+
+    if (foundToken === expectedToken) {
+      await handleSuccessfulVerification();
+    } else {
+      await handleTokenMismatch(foundToken, expectedToken);
+    }
+  };
+
+  const handleDnsLookupFailure = (data: DnsVerifyResponse) => {
+    setVerificationStep('error');
+    setVerificationError('Failed to verify domain');
+    setVerificationDetails({
+      message: 'DNS Lookup Failed',
+      details: `${data.details?.details ?? 'Unable to retrieve DNS records'}`,
+      attempts: data.details?.attempts,
+    });
+  };
+
+  const handleMissingTxtRecords = () => {
+    setVerificationStep('error');
+    setVerificationError('No TXT records found for this domain');
+    setVerificationDetails({
+      message: 'Missing TXT Records',
+      details: 'No TXT records were found for your domain. Please add the required TXT record.',
+    });
+  };
+
+  const handleMissingDashAuthRecord = () => {
+    setVerificationStep('error');
+    setVerificationError('Missing _dashauth TXT record');
+    setVerificationDetails({
+      message: 'Missing Required Record',
+      details: 'The _dashauth TXT record was not found. Please add the record exactly as shown.',
+    });
+  };
+
+  const handleSuccessfulVerification = async () => {
+    try {
+      const supabase = createClientComponentClient();
+      await supabase
+        .from('verified_domains')
+        .update({
+          verified: true,
+          verified_at: new Date().toISOString(),
+          status: 'verified',
+          last_verification_attempt: new Date().toISOString(),
+          verification_attempts: verificationData.verification_attempts
+            ? verificationData.verification_attempts + 1
+            : 1,
+          verification_error: null,
+        })
+        .eq('domain', domain);
+
+      setVerificationStep('complete');
       setVerificationError(undefined);
       setVerificationDetails(undefined);
-      setVerificationResponse(undefined);
-
-      let retryCount = 0;
-
-      const verifyWithRetry = async (attempt: number): Promise<DnsVerifyResponse> => {
-        try {
-          const response = await fetch(`/api/domains/verify?domain=${domain}`);
-          const data: DnsVerifyResponse = await response.json();
-          return data;
-        } catch (error) {
-          if (attempt < MAX_RETRIES) {
-            const delay = INITIAL_RETRY_DELAY * Math.pow(2, attempt); // Exponential backoff
-            console.log(`Retry attempt ${attempt + 1} after ${delay}ms`);
-            await new Promise((resolve) => setTimeout(resolve, delay));
-            return verifyWithRetry(attempt + 1);
-          }
-          throw error;
-        }
-      };
-
-      try {
-        // Step 1: Fetch DNS Records with retry logic
-        console.log('🔍 Step 1: Fetching DNS records for:', domain);
-        const data = await verifyWithRetry(0);
-        console.log('📊 DNS Response:', data);
-        setVerificationResponse(data);
-
-        // Check if DNS lookup was successful
-        if (!data.success) {
-          console.error('❌ DNS lookup failed:', data);
-
-          // If we have attempts data and any were successful, retry
-          if (data.details?.attempts?.some((a) => a.success)) {
-            if (retryCount < MAX_RETRIES) {
-              retryCount++;
-              const delay = INITIAL_RETRY_DELAY * Math.pow(2, retryCount - 1);
-              console.log(`Partial success detected. Retrying in ${delay}ms...`);
-              await new Promise((resolve) => setTimeout(resolve, delay));
-              return handleVerifyClick(); // Retry the whole verification
-            }
-          }
-
-          setVerificationStep('error');
-          const retriesText = retryCount > 0 ? ` (after ${retryCount} retries)` : '';
-          setVerificationError('Failed to verify domain' + retriesText);
-          setVerificationDetails({
-            message: 'DNS Lookup Failed',
-            details: `${data.details?.details ?? 'Unable to retrieve DNS records'} (After ${retryCount} retries)`,
-            attempts: data.details?.attempts,
-          });
-          return;
-        }
-
-        // Mark DNS fetch as successful
-        console.log('✅ Step 1 Complete: Successfully fetched DNS records');
-
-        // Step 2: Check for TXT Records
-        setVerificationStep('checking_txt');
-        if (!data.records || data.records.length === 0) {
-          console.error('❌ No TXT records found');
-          setVerificationStep('error');
-          setVerificationError('No TXT records found for this domain');
-          setVerificationDetails({
-            message: 'Missing TXT Records',
-            details:
-              'No TXT records were found for your domain. Please add the required TXT record.',
-            attempts: data.details?.attempts,
-          });
-          return;
-        }
-
-        console.log('✅ Step 2 Complete: Found TXT records:', data.records);
-
-        // Step 3: Verify _dashauth Record Exists
-        setVerificationStep('verifying_match');
-        const dashAuthRecord = data.records.find(
-          (record) => record.name.includes('_dashauth') && record.type === 'TXT'
-        );
-
-        if (!dashAuthRecord) {
-          console.error('❌ No _dashauth TXT record found');
-          setVerificationStep('error');
-          setVerificationError('Missing _dashauth TXT record');
-          setVerificationDetails({
-            message: 'Missing Required Record',
-            details:
-              'The _dashauth TXT record was not found. Please add the record exactly as shown.',
-            attempts: data.details?.attempts,
-          });
-          return;
-        }
-
-        console.log('✅ Step 3 Complete: Found _dashauth record:', dashAuthRecord);
-
-        // Step 4: Verify Token Match
-        const expectedToken = verificationData.verification_token;
-        const foundToken = dashAuthRecord.data.trim();
-
-        console.log('🔍 Step 4: Comparing tokens:', {
-          found: foundToken,
-          expected: expectedToken,
-          rawLookup: data._debug?.rawLookup,
-        });
-
-        if (foundToken === expectedToken) {
-          // All steps successful
-          console.log('✅ Step 4 Complete: Tokens match');
-          console.log('🎉 All verification steps completed successfully');
-
-          try {
-            // Update Supabase with verification success
-            const supabase = createClientComponentClient();
-            await supabase
-              .from('verified_domains')
-              .update({
-                verified: true,
-                verified_at: new Date().toISOString(),
-                status: 'verified',
-                last_verification_attempt: new Date().toISOString(),
-                verification_attempts: verificationData.verification_attempts
-                  ? verificationData.verification_attempts + 1
-                  : 1,
-                verification_error: null,
-              })
-              .eq('domain', domain);
-
-            setVerificationStep('complete');
-            setVerificationError(undefined);
-            setVerificationDetails(undefined);
-            setVerificationResponse(data);
-          } catch (error) {
-            console.error('Failed to update verification status:', error);
-            setVerificationStep('error');
-            setVerificationError('Failed to save verification status');
-          }
-        } else {
-          console.error('❌ Token mismatch');
-          setVerificationStep('error');
-          setVerificationError('TXT record value does not match expected value');
-          setVerificationDetails({
-            message: 'Token Mismatch',
-            details: `Found "${foundToken}" but expected "${expectedToken}". Please ensure you've copied the exact verification token.`,
-            attempts: data.details?.attempts,
-          });
-
-          // Update Supabase with verification failure
-          const supabase = createClientComponentClient();
-          await supabase
-            .from('verified_domains')
-            .update({
-              verification_error: `TXT record value does not match. Found "${foundToken}" but expected "${expectedToken}"`,
-              last_verification_attempt: new Date().toISOString(),
-              verification_attempts: verificationData.verification_attempts
-                ? verificationData.verification_attempts + 1
-                : 1,
-            })
-            .eq('domain', domain);
-
-          return;
-        }
-      } catch (error) {
-        console.error('❌ Verification failed:', error);
-        setVerificationStep('error');
-        const retriesText = retryCount > 0 ? ` (after ${retryCount} retries)` : '';
-        setVerificationError('Failed to verify domain' + retriesText);
-        setVerificationDetails({
-          message: 'Verification Error',
-          details: error instanceof Error ? error.message : String(error),
-        });
-      }
     } catch (error) {
-      console.error('Verification failed:', error);
-      setVerificationError(error instanceof Error ? error.message : 'Verification failed');
+      console.error('Failed to update verification status:', error);
+      setVerificationStep('error');
+      setVerificationError('Failed to save verification status');
     }
+  };
+
+  const handleTokenMismatch = async (foundToken: string, expectedToken: string) => {
+    setVerificationStep('error');
+    setVerificationError('TXT record value does not match expected value');
+    setVerificationDetails({
+      message: 'Token Mismatch',
+      details: `Found "${foundToken}" but expected "${expectedToken}". Please ensure you've copied the exact verification token.`,
+    });
+
+    const supabase = createClientComponentClient();
+    await supabase
+      .from('verified_domains')
+      .update({
+        verification_error: `TXT record value does not match. Found "${foundToken}" but expected "${expectedToken}"`,
+        last_verification_attempt: new Date().toISOString(),
+        verification_attempts: verificationData.verification_attempts
+          ? verificationData.verification_attempts + 1
+          : 1,
+      })
+      .eq('domain', domain);
+  };
+
+  const handleVerificationError = (error: unknown) => {
+    console.error('Verification failed:', error);
+    setVerificationError(error instanceof Error ? error.message : 'Verification failed');
   };
 
   const itemVariants = {
@@ -691,6 +817,11 @@ export const DomainVerificationStep: React.FC<DomainVerificationStepProps> = ({
 
   const handleContinue = (onSkip: () => void) => {
     onSkip();
+  };
+
+  const getCardStatus = (step: VerificationStep, isVerified: boolean): 'success' | 'error' | undefined => {
+    if (step !== 'complete') return undefined;
+    return isVerified ? 'success' : 'error';
   };
 
   return (
@@ -751,33 +882,10 @@ export const DomainVerificationStep: React.FC<DomainVerificationStepProps> = ({
                           <p className="font-mono text-lg text-white dark:text-black">
                             {txtRecord}
                           </p>
-                          <button
-                            onClick={() => handleCopy(txtRecord, 'recordName')}
-                            className="group rounded-lg p-2 transition-all duration-200 hover:bg-zinc-700/50 dark:hover:bg-zinc-300/50"
-                          >
-                            <AnimatePresence mode="wait">
-                              {copiedStates.recordName ? (
-                                <motion.div
-                                  key="check"
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  exit={{ scale: 0 }}
-                                  className="text-green-500"
-                                >
-                                  <Check className="h-5 w-5" />
-                                </motion.div>
-                              ) : (
-                                <motion.div
-                                  key="copy"
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  exit={{ scale: 0 }}
-                                >
-                                  <Copy className="h-5 w-5 text-zinc-400 transition-colors group-hover:text-white dark:text-gray-600 dark:group-hover:text-black" />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </button>
+                          <CopyButton
+                            onCopy={() => handleCopy(txtRecord, 'recordName')}
+                            isCopied={copiedStates.recordName}
+                          />
                         </div>
                       </div>
                     </div>
@@ -791,33 +899,10 @@ export const DomainVerificationStep: React.FC<DomainVerificationStepProps> = ({
                           <p className="break-all font-mono text-lg text-white dark:text-black">
                             {txtValue}
                           </p>
-                          <button
-                            onClick={() => handleCopy(txtValue, 'recordValue')}
-                            className="group rounded-lg p-2 transition-all duration-200 hover:bg-zinc-700/50 dark:hover:bg-zinc-300/50"
-                          >
-                            <AnimatePresence mode="wait">
-                              {copiedStates.recordValue ? (
-                                <motion.div
-                                  key="check"
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  exit={{ scale: 0 }}
-                                  className="text-green-500"
-                                >
-                                  <Check className="h-5 w-5" />
-                                </motion.div>
-                              ) : (
-                                <motion.div
-                                  key="copy"
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  exit={{ scale: 0 }}
-                                >
-                                  <Copy className="h-5 w-5 text-zinc-400 transition-colors group-hover:text-white dark:text-gray-600 dark:group-hover:text-black" />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </button>
+                          <CopyButton
+                            onCopy={() => handleCopy(txtValue, 'recordValue')}
+                            isCopied={copiedStates.recordValue}
+                          />
                         </div>
                       </div>
                     </div>
@@ -842,65 +927,19 @@ export const DomainVerificationStep: React.FC<DomainVerificationStepProps> = ({
                       className="h-full"
                     >
                       <GlowingCard
-                        status={
-                          verificationStep === 'complete'
-                            ? isVerified
-                              ? 'success'
-                              : 'error'
-                            : undefined
-                        }
+                        status={getCardStatus(verificationStep, isVerified)}
                       >
                         <div className="flex flex-col space-y-6">
                           <div className="flex items-center gap-3">
-                            {verificationStep === 'complete' && isVerified ? (
-                              <CheckCircleIcon className="h-8 w-8 text-green-500" />
-                            ) : verificationStep === 'error' ||
-                              (verificationStep === 'complete' && !isVerified) ? (
-                              <XCircleIcon className="h-8 w-8 text-red-500" />
-                            ) : (
-                              <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{
-                                  duration: 1,
-                                  repeat: Infinity,
-                                  ease: 'linear',
-                                }}
-                                className="h-8 w-8 rounded-full border-2 border-zinc-500 border-t-transparent"
-                              />
-                            )}
+                            <VerificationIcon step={verificationStep} isVerified={isVerified} />
                             <h3 className="text-xl font-semibold text-zinc-100 dark:text-zinc-900">
-                              {verificationStep === 'complete'
-                                ? isVerified
-                                  ? 'Domain Verified!'
-                                  : 'Verification Failed'
-                                : verificationStep === 'error'
-                                  ? 'Verification Failed'
-                                  : 'Verifying Domain...'}
+                              {getVerificationStatusText(verificationStep, isVerified)}
                             </h3>
                           </div>
 
                           <div className="space-y-4">
                             <p className="text-sm text-zinc-400 dark:text-zinc-600">
-                              {(() => {
-                                switch (verificationStep) {
-                                  case 'fetching':
-                                    return 'Fetching DNS records...';
-                                  case 'checking_txt':
-                                    return 'Checking for TXT records...';
-                                  case 'verifying_match':
-                                    return 'Verifying record matches...';
-                                  case 'complete':
-                                    return isVerified
-                                      ? `Successfully verified domain ownership for ${domain}`
-                                      : 'Verification failed. Please check the details below.';
-                                  case 'error':
-                                    return (
-                                      verificationError ?? 'An error occurred during verification'
-                                    );
-                                  default:
-                                    return 'Verifying domain...';
-                                }
-                              })()}
+                              {getVerificationMessage(verificationStep, isVerified, domain, verificationError)}
                             </p>
 
                             <VerificationSteps
@@ -942,40 +981,12 @@ export const DomainVerificationStep: React.FC<DomainVerificationStepProps> = ({
                   <span className="absolute bottom-0 left-0 h-0 w-[2px] bg-white transition-all delay-300 duration-100 group-hover:h-full dark:bg-black" />
                 </button>
 
-                {verificationStep === 'complete' && verificationData.status === 'verified' ? (
-                  <button
-                    onClick={() => handleContinue(onSkip)}
-                    className="relative z-0 flex w-full items-center justify-center overflow-hidden whitespace-nowrap rounded-md border-[1px]
-                    border-zinc-800 px-4 py-2.5 font-medium text-neutral-300 transition-all duration-300 before:absolute before:inset-0
-                    before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-white
-                    before:transition-transform before:duration-1000 before:content-['']
-                    hover:scale-105
-                    hover:border-white hover:text-neutral-900 hover:before:translate-y-[0%]
-                    active:scale-100 dark:border-gray-300 dark:text-gray-700 dark:before:bg-black dark:hover:border-black
-                    dark:hover:text-white"
-                  >
-                    <span className="relative z-10">Continue</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleVerifyClick}
-                    disabled={verificationStep !== 'idle' && verificationStep !== 'error'}
-                    className="relative z-0 flex w-full items-center justify-center overflow-hidden whitespace-nowrap rounded-md border-[1px]
-                    border-zinc-800 px-4 py-2.5 font-medium text-neutral-300 transition-all duration-300 before:absolute before:inset-0
-                    before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-white
-                    before:transition-transform before:duration-1000 before:content-['']
-                    hover:scale-105
-                    hover:border-white hover:text-neutral-900 hover:before:translate-y-[0%]
-                    active:scale-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-300 dark:text-gray-700
-                    dark:before:bg-black dark:hover:border-black dark:hover:text-white"
-                  >
-                    <span className="relative z-10">
-                      {verificationStep !== 'idle' && verificationStep !== 'error'
-                        ? 'Verifying...'
-                        : 'Verify Now'}
-                    </span>
-                  </button>
-                )}
+                <VerificationButton
+                  verificationStep={verificationStep}
+                  verificationData={verificationData}
+                  onVerify={handleVerifyClick}
+                  onContinue={() => handleContinue(onSkip)}
+                />
               </div>
             </div>
           </div>
@@ -987,7 +998,6 @@ export const DomainVerificationStep: React.FC<DomainVerificationStepProps> = ({
 
 const HelpSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const [selectedTab, setSelectedTab] = useState<'general' | 'providers' | 'faq'>('general');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   const providersByCategory = DNS_PROVIDERS.reduce(
@@ -1053,76 +1063,38 @@ const HelpSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
               <div className="space-y-6">
                 {selectedTab === 'providers' && (
                   <div className="space-y-6">
-                    {Object.entries(providersByCategory)
-                      .sort(([a], [b]) => a.localeCompare(b))
-                      .map(([category, providers]) => {
-                        const sortedProviders = [...providers].sort((a, b) =>
-                          a.name.localeCompare(b.name)
-                        );
-                        return (
-                          <div key={category} className="space-y-2">
-                            <button
-                              onClick={() =>
-                                setSelectedCategory(selectedCategory === category ? null : category)
-                              }
-                              className="flex w-full items-center justify-between rounded-md p-2 font-medium text-white hover:bg-zinc-800/50 dark:text-black dark:hover:bg-zinc-200/50"
-                            >
-                              <span>{category}</span>
-                              <ChevronDownIcon
-                                className={`h-5 w-5 transition-transform ${
-                                  selectedCategory === category ? 'rotate-180' : ''
-                                }`}
-                              />
-                            </button>
-
-                            <AnimatePresence>
-                              {selectedCategory === category && (
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: 'auto', opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  className="overflow-hidden"
-                                >
-                                  <div className="space-y-2 pl-4">
-                                    {sortedProviders.map((provider) => (
-                                      <details key={provider.name} className="group">
-                                        <summary className="flex cursor-pointer list-none items-center justify-between rounded-md p-2 hover:bg-zinc-800/30 dark:hover:bg-zinc-200/30">
-                                          <span className="text-zinc-300 dark:text-zinc-700">
-                                            {provider.name}
-                                          </span>
-                                          <ChevronDownIcon className="h-4 w-4 transition-transform group-open:rotate-180" />
-                                        </summary>
-                                        <div className="space-y-2 pb-1 pl-4 pt-2 text-sm text-zinc-400 dark:text-zinc-600">
-                                          {provider.instructions && <p>{provider.instructions}</p>}
-                                          {provider.steps && (
-                                            <ol className="list-inside list-decimal space-y-1">
-                                              {provider.steps.map((step, index) => (
-                                                <li key={index}>{step}</li>
-                                              ))}
-                                            </ol>
-                                          )}
-                                          {provider.propagationTime && (
-                                            <p className="text-xs text-zinc-500">
-                                              Propagation Time: {provider.propagationTime}
-                                            </p>
-                                          )}
-                                        </div>
-                                      </details>
-                                    ))}
-                                  </div>
-                                </motion.div>
+                    {Object.entries(providersByCategory).map(([category, providers]) => (
+                      <div key={`category-${category.toLowerCase()}`} className="space-y-2">
+                        {providers.map((provider) => (
+                          <details key={createProviderId(category, provider.name)} className="group">
+                            <summary className="flex cursor-pointer list-none items-center justify-between rounded-md p-2 hover:bg-zinc-800/30 dark:hover:bg-zinc-200/30">
+                              <span className="text-zinc-300 dark:text-zinc-700">
+                                {provider.name}
+                              </span>
+                              <ChevronDownIcon className="h-4 w-4 transition-transform group-open:rotate-180" />
+                            </summary>
+                            <div className="space-y-2 pb-1 pl-4 pt-2 text-sm text-zinc-400 dark:text-zinc-600">
+                              {provider.instructions && <p>{provider.instructions}</p>}
+                              {provider.steps?.map((step) => (
+                                <li key={`step-${step.substring(0, 20)}`}>{step}</li>
+                              ))}
+                              {provider.propagationTime && (
+                                <p className="text-xs text-zinc-500">
+                                  Propagation Time: {provider.propagationTime}
+                                </p>
                               )}
-                            </AnimatePresence>
-                          </div>
-                        );
-                      })}
+                            </div>
+                          </details>
+                        ))}
+                      </div>
+                    ))}
                   </div>
                 )}
 
                 {selectedTab === 'faq' && (
                   <div className="space-y-4">
-                    {DOMAIN_VERIFICATION_FAQ.map((faq: FaqItem, index: number) => (
-                      <details key={index} className="group">
+                    {DOMAIN_VERIFICATION_FAQ.map((faq: FaqItem) => (
+                      <details key={createFaqId(faq.question)} className="group">
                         <summary className="flex cursor-pointer list-none items-center justify-between rounded-md p-2 hover:bg-zinc-800/30 dark:hover:bg-zinc-200/30">
                           <span className="font-medium text-white dark:text-black">
                             {faq.question}
@@ -1171,5 +1143,37 @@ const HelpSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
         </>
       )}
     </AnimatePresence>
+  );
+};
+
+const getStatusClassName = (status: string): string => {
+  if (status === 'current') return 'font-medium';
+  if (status === 'error') return 'text-red-500';
+  if (status === 'complete') return 'text-green-500';
+  return 'text-zinc-500';
+};
+
+const VerificationIcon: React.FC<{
+  step: VerificationStep;
+  isVerified: boolean;
+}> = ({ step, isVerified }) => {
+  if (step === 'complete' && isVerified) {
+    return <CheckCircleIcon className="h-8 w-8 text-green-500" />;
+  }
+  
+  if (step === 'error' || (step === 'complete' && !isVerified)) {
+    return <XCircleIcon className="h-8 w-8 text-red-500" />;
+  }
+  
+  return (
+    <motion.div
+      animate={{ rotate: 360 }}
+      transition={{
+        duration: 1,
+        repeat: Infinity,
+        ease: 'linear',
+      }}
+      className="h-8 w-8 rounded-full border-2 border-zinc-500 border-t-transparent"
+    />
   );
 };

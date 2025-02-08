@@ -21,24 +21,24 @@ const TooltipSection: React.FC<TooltipSectionProps> = ({
 
   const getColoredText = (text: string) => {
     if (text.includes('▲')) {
-      return text.split(' ').map((word, index) =>
+      return text.split(' ').map((word, position) =>
         word.includes('▲') || !isNaN(parseFloat(word)) ? (
-          <span key={index} className="text-green-400">
+          <span key={`up-${word}-${position}`} className="text-green-400">
             {word}{' '}
           </span>
         ) : (
-          <span key={index}>{word} </span>
+          <span key={`text-${word}-${position}`}>{word} </span>
         )
       );
     }
     if (text.includes('▼')) {
-      return text.split(' ').map((word, index) =>
+      return text.split(' ').map((word, position) =>
         word.includes('▼') || !isNaN(parseFloat(word)) ? (
-          <span key={index} className="text-red-400">
+          <span key={`down-${word}-${position}`} className="text-red-400">
             {word}{' '}
           </span>
         ) : (
-          <span key={index}>{word} </span>
+          <span key={`text-${word}-${position}`}>{word} </span>
         )
       );
     }

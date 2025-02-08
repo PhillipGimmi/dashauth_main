@@ -1,8 +1,7 @@
-import ComplianceSection from '@/components/group/Home/ComplianceSection';
-
-import DashboardSection from '@/components/group/Home/DashboardSection';
-import HeroSection from '@/components/group/Home/HeroSection';
-import FloatingNav from '@/components/navbar/FloatingNav';
+import ComplianceSection from "@/components/group/Home/ComplianceSection";
+import DashboardSection from "@/components/group/Home/DashboardSection";
+import HeroSection from "@/components/group/Home/HeroSection";
+import FloatingNav from "@/components/navbar/FloatingNav";
 
 const HomePage = () => {
   return (

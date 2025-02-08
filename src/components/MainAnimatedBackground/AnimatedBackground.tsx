@@ -1,4 +1,7 @@
+'use client';
+
 import React, { useEffect, useRef } from 'react';
+
 
 interface RendererProps {
   canvas: HTMLCanvasElement;
@@ -24,6 +27,7 @@ class Renderer implements RendererProps {
   private cachedResolutionLocation: WebGLUniformLocation | null = null;
   private cachedTimeLocation: WebGLUniformLocation | null = null;
   private cachedPositionLocation: number = -1;
+  private cachedIsDarkModeLocation: WebGLUniformLocation | null = null;
 
   constructor(canvas: HTMLCanvasElement, scale: number) {
     this.canvas = canvas;
@@ -74,6 +78,7 @@ class Renderer implements RendererProps {
     this.cachedResolutionLocation = this.gl.getUniformLocation(this.program, 'resolution');
     this.cachedTimeLocation = this.gl.getUniformLocation(this.program, 'time');
     this.cachedPositionLocation = this.gl.getAttribLocation(this.program, 'position');
+    this.cachedIsDarkModeLocation = this.gl.getUniformLocation(this.program, 'isDarkMode');
   }
 
   private compileShader(shader: WebGLShader, source: string): void {
@@ -107,7 +112,14 @@ class Renderer implements RendererProps {
   render(now: number): void {
     if (!this.program) return;
 
-    this.gl.clearColor(0.1, 0.1, 0.2, 1); // Keep background dark shade
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    
+    if (isDarkMode) {
+      this.gl.clearColor(0, 0, 0, 0);
+    } else {
+      this.gl.clearColor(0.1, 0.1, 0.2, 1); // Original dark background
+    }
+
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     this.gl.useProgram(this.program);
 
@@ -115,6 +127,7 @@ class Renderer implements RendererProps {
       this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
     }
 
+    this.gl.uniform1f(this.cachedIsDarkModeLocation, isDarkMode ? 1.0 : 0.5);
     this.gl.uniform2f(this.cachedResolutionLocation, this.canvas.width, this.canvas.height);
     this.gl.uniform1f(this.cachedTimeLocation, now * 0.001);
     this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
@@ -141,6 +154,7 @@ const shaderSource = `#version 300 es
     out vec4 O;
     uniform float time;
     uniform vec2 resolution;
+    uniform float isDarkMode;
     #define FC gl_FragCoord.xy
     #define R resolution
     #define T (time * 0.05)
@@ -192,15 +206,30 @@ const shaderSource = `#version 300 es
         uv.x += sin(T * (0.25 + i * 0.1) + uv.y * 1.2) * thickness;
         float line = (0.01 + (R.x > 768.0 ? 0.002 : 0.001) * sin(uv.y * 2.0))/abs(uv.x);
         
-        // Add fog to the line
         float fogIntensity = fogEffect(uv, 0.5);
         d += line * (1.0 + fogIntensity * 0.5);
       }
       return d;
     }
     
+    // Add a function for anime-style lines
+    float animeLines(vec2 uv) {
+        // Create sharp angular lines
+        float lines = 0.0;
+        
+        // Radial lines
+        float angle = atan(uv.y, uv.x);
+        lines += smoothstep(0.98, 1.0, abs(sin(angle * 8.0 + T))); // 8 radial lines
+        
+        // Circular lines
+        float dist = length(uv);
+        lines += smoothstep(0.98, 1.0, abs(sin(dist * 4.0 - T))); // Pulsing circles
+        
+        return lines * (1.0 - smoothstep(0.0, 1.5, dist)); // Fade out with distance
+    }
+    
     vec3 scene(vec2 uv) {
-      vec3 col = vec3(0);
+      vec3 col = vec3(0.0);
       vec2 uv1 = uv;
       vec2 uv2 = uv + vec2(-1.0, 0.0);
       
@@ -213,28 +242,43 @@ const shaderSource = `#version 300 es
       for (float i = 0.0; i < 3.0; i++) {
         int k = int(mod(i, 3.0));
         float intensity = 0.7 + 0.1 * sin(T + i);
-        
-        // Add fog effect to the pattern
         float fog1 = fogEffect(uv1 + vec2(T * 0.1), 0.3);
         float fog2 = fogEffect(uv2 + vec2(T * 0.1), 0.3);
         
-        col[k] += pattern(uv1 + i * spacing/MN) * intensity * (1.0 + fog1);
-        col[k] += pattern(uv2 + i * spacing/MN) * intensity * (1.0 + fog2);
+        // Add 20% more intensity in dark mode
+        float finalIntensity = isDarkMode > 1.0 ? intensity *0.1 : intensity;
+        
+        col[k] += pattern(uv1 + i * spacing/MN) * finalIntensity * (1.0 + fog1);
+        col[k] += pattern(uv2 + i * spacing/MN) * finalIntensity * (1.0 + fog2);
       }
       return col;
+    }
+    
+    
+    // Add edge detection for rim lighting
+    float getRimLight(vec2 uv, float width, float falloff) {
+        float dist = length(uv);
+        float radialGradient = 1.0 - dist;
+        
+        // Create sharp edge transition
+        float edge = smoothstep(width - falloff, width, radialGradient);
+        edge *= smoothstep(width + falloff, width, radialGradient);
+        
+        // Add some variation to make it more interesting
+        float angleVar = abs(sin(atan(uv.y, uv.x) * 6.0 + T));
+        edge *= (0.8 + 0.2 * angleVar);
+        
+        return edge;
     }
     
     void main() {
       vec2 uv = (FC - 0.5 * R)/MN;
       vec3 col = vec3(0);
       float s = 6.0;
-      float e = 5e-4;
       
-      // Keep original static UV logic for light source
       vec2 staticUV = uv;
       uv.y += T * 0.25;
       
-      // Rotate grid pattern by 45 degrees while keeping light source fixed
       mat2 rot = mat2(cos(PI/4.0), -sin(PI/4.0), sin(PI/4.0), cos(PI/4.0));
       vec2 rotatedUV = rot * uv;
       
@@ -242,22 +286,21 @@ const shaderSource = `#version 300 es
         abs(sin(rotatedUV.x * s)),
         abs(cos(rotatedUV.y * s))
       );
-      col += vec3(step(0.95, gridPattern)) * 0.03;
       
-      // Maintain original light source positioning
+      if (isDarkMode > 0.1) {
+        col += vec3(step(0.95, gridPattern)) * 0.03;
+      } else {
+        col += vec3(step(0.95, gridPattern)) * 0.03;
+      }
+      
       staticUV.y += R.x > R.y ? 0.5 : 0.5 * (R.y/R.x);
       
-      // Add base fog
-      float baseFog = fogEffect(uv * 2.0, 0.2);
-      col += vec3(baseFog * 0.1);
-      
-      // Add scene with fog while preserving light source position
-      vec3 sceneColor = scene(staticUV) * 0.8;
-      float sceneFog = fogEffect(staticUV * 1.5, 0.4);
-      sceneColor *= 1.0 + sceneFog * 0.3;
+      vec3 sceneColor = scene(staticUV);
       col += sceneColor;
       
-      O = vec4(col * 0.6, 0.15);
+      float alpha = isDarkMode > 0.5 ? 0.2 : 0.15;
+      float intensity = isDarkMode > 0.5 ? 0.8 : 0.6;
+      O = vec4(col * intensity, alpha);
     }`;
 
 const AnimatedBackground: React.FC = () => {
@@ -307,7 +350,7 @@ const AnimatedBackground: React.FC = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none fixed inset-0 h-full w-full"
+      className="pointer-events-none fixed inset-0 h-full w-full bg-black dark:bg-white"
       style={{
         position: 'fixed',
         top: 0,

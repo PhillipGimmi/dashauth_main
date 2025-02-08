@@ -28,7 +28,7 @@ export const PlatformStep: React.FC<PlatformStepProps> = ({
   const [isHovering, setIsHovering] = useState<Record<string, boolean>>({});
   const [showFAQ, setShowFAQ] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedFAQs, setExpandedFAQs] = useState<number[]>([]);
+  const [expandedFAQs, setExpandedFAQs] = useState<string[]>([]);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [currentPlatform, setCurrentPlatform] = useState<string | null>(selectedOption);
@@ -86,9 +86,9 @@ export const PlatformStep: React.FC<PlatformStepProps> = ({
     }, 300);
   };
 
-  const toggleFAQ = (index: number) => {
+  const toggleFAQ = (faqId: string) => {
     setExpandedFAQs((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+      prev.includes(faqId) ? prev.filter((id) => id !== faqId) : [...prev, faqId]
     );
   };
 
@@ -276,30 +276,30 @@ export const PlatformStep: React.FC<PlatformStepProps> = ({
                 }}
                 className="space-y-2"
               >
-                {filteredFAQs.map((faq, index) => (
+                {filteredFAQs.map((faq) => (
                   <motion.div
-                    key={index}
+                    key={faq.id}
                     variants={{
                       hidden: { opacity: 0, y: 20 },
                       visible: { opacity: 1, y: 0 },
                     }}
-                    transition={{ delay: 0.2 * (index + 1) }}
+                    transition={{ delay: 0.2 }}
                     className="overflow-hidden rounded-lg border border-zinc-800 dark:border-gray-200"
                   >
                     <button
-                      onClick={() => toggleFAQ(index)}
+                      onClick={() => toggleFAQ(faq.id)}
                       className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-zinc-800/50 dark:hover:bg-gray-50"
                     >
                       <h3 className="font-semibold text-white dark:text-gray-900">
                         {faq.question}
                       </h3>
-                      {expandedFAQs.includes(index) ? (
+                      {expandedFAQs.includes(faq.id) ? (
                         <ChevronUp className="h-4 w-4 text-zinc-400 dark:text-gray-400" />
                       ) : (
                         <ChevronDown className="h-4 w-4 text-zinc-400 dark:text-gray-400" />
                       )}
                     </button>
-                    {expandedFAQs.includes(index) && (
+                    {expandedFAQs.includes(faq.id) && (
                       <motion.div
                         initial={{ height: 0 }}
                         animate={{ height: 'auto' }}

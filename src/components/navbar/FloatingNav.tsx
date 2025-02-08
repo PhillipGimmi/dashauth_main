@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion, useMotionValue, useSpring, useVelocity, useScroll } from 'framer-motion';
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useVelocity,
+  useScroll,
+} from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
@@ -156,15 +162,8 @@ const MobileMenu = ({
   );
 };
 
-// Main FloatingNav component
-const FloatingNav = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [hasScrolled, setHasScrolled] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const pathname = usePathname();
-  const isAuthPage = pathname?.includes('signin');
-
+// New custom hook for scroll and animation logic
+const useNavAnimation = (isMobile: boolean) => {
   const { scrollY } = useScroll();
   const scrollVelocity = useVelocity(scrollY);
   const smoothScrollVelocity = useSpring(scrollVelocity, {
@@ -182,156 +181,182 @@ const FloatingNav = () => {
   });
 
   useEffect(() => {
-    setMounted(true);
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+    if (isMobile) return;
 
+    return smoothScrollVelocity.on('change', (latestVelocity) => {
+      const clampedVelocity = Math.max(-1000, Math.min(1000, latestVelocity));
+      navbarPosition.set(clampedVelocity * 0.025);
+
+      if (Math.abs(latestVelocity) < 1) {
+        navbarPosition.set(0);
+      }
+    });
+  }, [smoothScrollVelocity, navbarPosition, isMobile]);
+
+  return springNavPosition;
+};
+
+// New custom hook for responsive and scroll state
+const useNavState = () => {
+  const [hasScrolled, setHasScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   useEffect(() => {
-    const updateHasScrolled = () => {
-      setHasScrolled(window.scrollY > 50);
-    };
-
+    const updateHasScrolled = () => setHasScrolled(window.scrollY > 50);
+    
     window.addEventListener('scroll', updateHasScrolled);
     return () => window.removeEventListener('scroll', updateHasScrolled);
   }, []);
 
-  useEffect(() => {
-    if (isMobile) return;
+  return { hasScrolled, isMobile, mounted };
+};
 
-    const unsubscribeFromVelocity = smoothScrollVelocity.on(
-      'change',
-      (latestVelocity) => {
-        const clampedVelocity = Math.max(-1000, Math.min(1000, latestVelocity));
-        navbarPosition.set(clampedVelocity * 0.025);
+// New component for mobile navigation
+const MobileNavigation = ({ isMenuOpen, setIsMenuOpen }: { 
+  isMenuOpen: boolean; 
+  setIsMenuOpen: (value: boolean) => void;
+}) => (
+  <>
+    <div className="h-[52px]" />
+    <header className="fixed top-0 left-0 right-0 z-50">
+      <nav className="w-full bg-black/80 backdrop-blur-lg border-b border-neutral-50/5">
+        <div className="flex items-center justify-between px-4 py-3">
+          <Link href="/" className="flex items-center">
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 50 39"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="fill-neutral-50"
+              >
+                <path d="M16.4992 2H37.5808L22.0816 24.9729H1L16.4992 2Z" />
+                <path d="M17.4224 27.102L11.4192 36H33.5008L49 13.0271H32.7024L23.2064 27.102H17.4224Z" />
+              </svg>
+            </motion.div>
+          </Link>
 
-        if (Math.abs(latestVelocity) < 1) {
-          navbarPosition.set(0);
-        }
-      },
-    );
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="p-2"
+          >
+            <MenuIcon isOpen={isMenuOpen} />
+          </motion.button>
+        </div>
+      </nav>
+    </header>
+  </>
+);
 
-    return unsubscribeFromVelocity;
-  }, [smoothScrollVelocity, navbarPosition, isMobile]);
+// New component for desktop navigation
+const DesktopNavigation = ({ 
+  hasScrolled, 
+  springNavPosition, 
+  isAuthPage 
+}: { 
+  hasScrolled: boolean; 
+  springNavPosition: any; 
+  isAuthPage: boolean;
+}) => (
+  <motion.div
+    className="fixed left-0 right-0 z-50 flex justify-center pointer-events-none"
+    style={{ y: hasScrolled ? springNavPosition : 0 }}
+  >
+    <motion.div
+      className="w-full flex justify-center"
+      animate={{
+        width: hasScrolled ? '420px' : '100%',
+      }}
+      transition={{
+        width: {
+          duration: 0.3,
+          ease: [0.32, 0.72, 0, 1],
+        },
+      }}
+    >
+      <motion.nav
+        className="flex w-full items-center justify-between pointer-events-auto"
+        initial={false}
+        animate={{
+          y: hasScrolled ? 24 : 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          borderBottom: hasScrolled ? 'none' : '1px solid rgba(255, 255, 255, 0.05)',
+          border: hasScrolled ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+          borderRadius: hasScrolled ? '0.75rem' : '0',
+          padding: hasScrolled ? '0.75rem' : '0.5rem 1.5rem',
+        }}
+        transition={{
+          duration: 0.2,
+          ease: [0.32, 0.72, 0, 1],
+        }}
+      >
+        <Link href="/" className={`flex items-center ${hasScrolled ? 'mr-6' : ''}`}>
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 50 39"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="fill-neutral-50"
+            >
+              <path d="M16.4992 2H37.5808L22.0816 24.9729H1L16.4992 2Z" />
+              <path d="M17.4224 27.102L11.4192 36H33.5008L49 13.0271H32.7024L23.2064 27.102H17.4224Z" />
+            </svg>
+          </motion.div>
+        </Link>
 
-  if (!mounted) {
-    return null;
-  }
+        <div className="flex items-center gap-6">
+          <NavLink href="/">Home</NavLink>
+          <NavLink href="/dashboard">Dashboard</NavLink>
+          <NavLink href="/pricing">Pricing</NavLink>
+          {!isAuthPage && <AuthButton />}
+        </div>
+      </motion.nav>
+    </motion.div>
+  </motion.div>
+);
+
+// Simplified FloatingNav component
+const FloatingNav = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { hasScrolled, isMobile, mounted } = useNavState();
+  const pathname = usePathname();
+  const isAuthPage = pathname?.includes('signin');
+  const springNavPosition = useNavAnimation(isMobile);
+
+  if (!mounted) return null;
 
   return (
     <>
       {isMobile ? (
-        <>
-          <div className="h-[52px]" />
-          <header className="fixed top-0 left-0 right-0 z-50">
-            <nav className="w-full bg-black/80 backdrop-blur-lg border-b border-neutral-50/5">
-              <div className="flex items-center justify-between px-4 py-3">
-                <Link href="/" className="flex items-center">
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                  >
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 50 39"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="fill-neutral-50"
-                    >
-                      <path d="M16.4992 2H37.5808L22.0816 24.9729H1L16.4992 2Z" />
-                      <path d="M17.4224 27.102L11.4192 36H33.5008L49 13.0271H32.7024L23.2064 27.102H17.4224Z" />
-                    </svg>
-                  </motion.div>
-                </Link>
-
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="p-2"
-                >
-                  <MenuIcon isOpen={isMenuOpen} />
-                </motion.button>
-              </div>
-            </nav>
-          </header>
-        </>
+        <MobileNavigation isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
       ) : (
-        <motion.div
-          className="fixed left-0 right-0 z-50 flex justify-center pointer-events-none"
-          style={{ y: hasScrolled ? springNavPosition : 0 }}
-        >
-          <motion.div
-            className="w-full flex justify-center"
-            animate={{
-              width: hasScrolled ? '420px' : '100%',
-            }}
-            transition={{
-              width: {
-                duration: 0.3,
-                ease: [0.32, 0.72, 0, 1],
-              },
-            }}
-          >
-            <motion.nav
-              className="flex w-full items-center justify-between pointer-events-auto"
-              initial={false}
-              animate={{
-                y: hasScrolled ? 24 : 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                borderBottom: hasScrolled
-                  ? 'none'
-                  : '1px solid rgba(255, 255, 255, 0.05)',
-                border: hasScrolled
-                  ? '1px solid rgba(255, 255, 255, 0.1)'
-                  : 'none',
-                borderRadius: hasScrolled ? '0.75rem' : '0',
-                padding: hasScrolled ? '0.75rem' : '0.5rem 1.5rem',
-              }}
-              transition={{
-                duration: 0.2,
-                ease: [0.32, 0.72, 0, 1],
-              }}
-            >
-              <Link
-                href="/"
-                className={`flex items-center ${hasScrolled ? 'mr-6' : ''}`}
-              >
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                >
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 50 39"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="fill-neutral-50"
-                  >
-                    <path d="M16.4992 2H37.5808L22.0816 24.9729H1L16.4992 2Z" />
-                    <path d="M17.4224 27.102L11.4192 36H33.5008L49 13.0271H32.7024L23.2064 27.102H17.4224Z" />
-                  </svg>
-                </motion.div>
-              </Link>
-
-              <div className="flex items-center gap-6">
-                <NavLink href="/">Home</NavLink>
-                <NavLink href="/dashboard">Dashboard</NavLink>
-                <NavLink href="/pricing">Pricing</NavLink>
-                {!isAuthPage && <AuthButton />}
-              </div>
-            </motion.nav>
-          </motion.div>
-        </motion.div>
+        <DesktopNavigation 
+          hasScrolled={hasScrolled} 
+          springNavPosition={springNavPosition} 
+          isAuthPage={isAuthPage} 
+        />
       )}
-
       <MobileMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
     </>
   );

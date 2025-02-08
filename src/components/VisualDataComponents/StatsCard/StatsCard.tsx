@@ -256,8 +256,11 @@ const StatsCard: React.FC<StatsCardProps> = ({ stat, index }) => {
               className="mt-4 border-t border-zinc-800 pt-4"
             >
               <p className="mb-2 text-sm text-zinc-400">Authentication Failures</p>
-              {stat.details.map((detail, idx) => (
-                <div key={idx} className="mb-1 flex justify-between text-sm">
+              {stat.details.map((detail) => (
+                <div 
+                  key={detail.reason} 
+                  className="mb-1 flex justify-between text-sm"
+                >
                   <span className="text-zinc-400">{detail.reason}</span>
                   <span className="text-white">{detail.percentage}%</span>
                 </div>

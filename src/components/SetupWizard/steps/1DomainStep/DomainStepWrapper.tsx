@@ -313,9 +313,9 @@ export default function DomainStepWrapper({
     });
   };
 
-  return (
-    <div>
-      {!verificationData && showVerification ? (
+  const renderContent = () => {
+    if (!verificationData && showVerification) {
+      return (
         <VerificationPrompt
           isOpen={true}
           domain={pendingDomain ?? ''}
@@ -324,18 +324,20 @@ export default function DomainStepWrapper({
           onVerifyLater={handleVerifyLater}
           onClose={() => setShowVerification(false)}
         />
-      ) : verificationData ? (
+      );
+    }
+
+    if (verificationData) {
+      return (
         <DomainVerificationStep
           domain={pendingDomain ?? ''}
           verificationData={verificationData}
           isVerified={verificationData?.status === 'verified'}
           onSkip={async () => {
             if (!pendingDomain) return;
-
             if (onDomainChange) {
               await onDomainChange(pendingDomain);
             }
-
             onComplete({
               domain: pendingDomain,
               id: domainId ?? crypto.randomUUID(),
@@ -350,9 +352,11 @@ export default function DomainStepWrapper({
           }}
           initialError={error}
         />
-      ) : (
-        <DomainStep initialValue={domain} onProceedAction={handleDomainSubmit} />
-      )}
-    </div>
-  );
+      );
+    }
+
+    return <DomainStep initialValue={domain} onProceedAction={handleDomainSubmit} />;
+  };
+
+  return <div>{renderContent()}</div>;
 }

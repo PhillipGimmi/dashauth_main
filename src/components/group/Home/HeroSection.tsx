@@ -381,11 +381,13 @@ const HeroSection = () => {
                   className="text-3xl font-light leading-[1.1] tracking-tight text-white sm:text-4xl sm:leading-tight lg:text-6xl 2xl:text-7xl"
                 >
                   {businessContexts[activeContext].title.split(' ').map((word, wordIndex) => (
-                    <span key={wordIndex} className="mr-2 inline-block whitespace-nowrap">
-                      {/* Wrap each word in a container */}
+                    <span 
+                      key={`${activeContext}-word-${wordIndex}`} 
+                      className="mr-2 inline-block whitespace-nowrap"
+                    >
                       {word.split('').map((letter, letterIndex) => (
                         <motion.span
-                          key={letterIndex}
+                          key={`${activeContext}-word-${wordIndex}-letter-${letterIndex}-${letter}`}
                           className="inline-block"
                           variants={{
                             initial: {

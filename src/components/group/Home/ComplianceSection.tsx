@@ -2,18 +2,9 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Shield, Lock, FileCheck, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import { WebGLBackground } from '../../WarpBackground/WarpBackground';
-
-interface Framework {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ElementType;
-  features: string[];
-  businessValue: string;
-  requirements: string[];
-}
+import { frameworks, Framework } from '@/data/complianceFrameworks';
 
 interface CardProps {
   children: React.ReactNode;
@@ -89,10 +80,10 @@ const FrameworkCard = ({ framework, isExpanded, onClick }: FrameworkCardProps) =
 
               <h4 className="mb-2 font-semibold">Key Requirements</h4>
               <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {framework.requirements.map((req: string, idx: number) => (
-                  <li key={idx} className="flex items-center gap-2 text-sm text-zinc-700">
+                {framework.requirements.map((req) => (
+                  <li key={req.id} className="flex items-center gap-2 text-sm text-zinc-700">
                     <Check className="h-4 w-4 flex-shrink-0 text-emerald-500" />
-                    <span>{req}</span>
+                    <span>{req.text}</span>
                   </li>
                 ))}
               </ul>
@@ -102,10 +93,10 @@ const FrameworkCard = ({ framework, isExpanded, onClick }: FrameworkCardProps) =
       </AnimatePresence>
 
       <ul className={`space-y-3 ${isExpanded ? 'hidden' : 'block'}`}>
-        {framework.features.map((feature: string, index: number) => (
-          <motion.li key={index} className="flex items-start gap-3">
+        {framework.features.map((feature) => (
+          <motion.li key={feature.id} className="flex items-start gap-3">
             <Check className="mt-1 h-5 w-5 flex-shrink-0 text-emerald-500" />
-            <span className={isExpanded ? 'text-zinc-700' : 'text-zinc-300'}>{feature}</span>
+            <span className={isExpanded ? 'text-zinc-700' : 'text-zinc-300'}>{feature.text}</span>
           </motion.li>
         ))}
       </ul>
@@ -115,72 +106,6 @@ const FrameworkCard = ({ framework, isExpanded, onClick }: FrameworkCardProps) =
 
 const ComplianceSection = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const frameworks: Framework[] = [
-    {
-      id: 'soc2',
-      name: 'SOC 2',
-      description: 'Security, Availability, Processing Integrity, Confidentiality, and Privacy',
-      icon: Shield,
-      features: [
-        'Access Control & Authentication',
-        'System Operations & Monitoring',
-        'Risk Management & Security',
-        'Data Protection & Privacy',
-        'Incident Response Plans',
-      ],
-      businessValue:
-        'SOC 2 compliance is crucial for B2B SaaS companies. Our integrated solution provides continuous monitoring, automated evidence collection, and real-time compliance dashboards, saving your team countless hours of manual work.',
-      requirements: [
-        'Annual Audit',
-        'Continuous Monitoring',
-        'Security Controls',
-        'Employee Training',
-      ],
-    },
-    {
-      id: 'gdpr',
-      name: 'GDPR',
-      description: 'European Union Data Protection and Privacy Standards',
-      icon: Lock,
-      features: [
-        'Data Processing Agreements',
-        'User Consent Management',
-        'Right to Data Portability',
-        'Privacy by Design',
-        'Data Breach Notifications',
-      ],
-      businessValue:
-        'GDPR compliance is mandatory for serving EU customers. Our platform handles all GDPR requirements out-of-the-box, including consent management, data portability, and automated privacy impact assessments.',
-      requirements: [
-        'DPO Assignment',
-        'Privacy Impact Assessments',
-        'Data Processing Records',
-        'Breach Notifications',
-      ],
-    },
-    {
-      id: 'hipaa',
-      name: 'HIPAA',
-      description: 'Healthcare Data Security and Privacy',
-      icon: FileCheck,
-      features: [
-        'PHI Data Encryption',
-        'Access Controls & Auditing',
-        'Business Associate Agreements',
-        'Security Risk Analysis',
-        'Breach Notification Protocol',
-      ],
-      businessValue:
-        'Healthcare companies must maintain HIPAA compliance or face severe penalties. Our solution provides comprehensive HIPAA compliance features, including BAA management and PHI handling protocols.',
-      requirements: [
-        'Privacy Rule',
-        'Security Rule',
-        'Breach Notification',
-        'Regular Risk Assessments',
-      ],
-    },
-  ];
 
   const containerVariants = {
     hidden: { opacity: 0 },

@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { ThemeToggle } from '@/components/ThemeToggle/ThemeToggle';
 import RouteGuard from '@/components/RouteGuard/RouteGuard';
 import AuthHydration from '@/components/auth/AuthHydration/AuthHydration';
+import AnimatedBackground from '@/components/MainAnimatedBackground/AnimatedBackground';
 
 const notoSansJP = Noto_Sans_JP({
   subsets: ['latin'],
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: { readonly children: React.Reac
       <body className="h-screen overflow-y-auto bg-black dark:bg-white">
         <div className="min-h-full">
           <ThemeProvider>
+            <AnimatedBackground />
             <AuthHydration />
             <ThemeToggle />
             <RouteGuard>{children}</RouteGuard>

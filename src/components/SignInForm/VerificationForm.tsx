@@ -34,6 +34,22 @@ export function VerificationForm({
   onResendCode,
 }: VerificationFormProps) {
   const [code, setCode] = useState('');
+  const DIGIT_POSITIONS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth'];
+
+  const getResendButtonText = () => {
+    if (formState.loading) {
+      return (
+        <span className="flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Sending verification email...
+        </span>
+      );
+    }
+    if (formState.success) {
+      return 'Email sent successfully';
+    }
+    return 'Resend code';
+  };
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 6);
@@ -71,16 +87,7 @@ export function VerificationForm({
           disabled={!formState.showResendButton}
           className="text-sm text-blue-500 transition-colors hover:text-blue-400 disabled:opacity-50 disabled:hover:text-blue-500"
         >
-          {formState.loading ? (
-            <span className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Sending verification email...
-            </span>
-          ) : formState.success ? (
-            'Email sent successfully'
-          ) : (
-            'Resend code'
-          )}
+          {getResendButtonText()}
         </button>
       </div>
 
@@ -107,7 +114,7 @@ export function VerificationForm({
           <div className="flex justify-between gap-2">
             {digits.map((digit, index) => (
               <div
-                key={index}
+                key={`verification-${DIGIT_POSITIONS[index]}`}
                 className={`flex h-12 w-12 items-center justify-center rounded-lg border 
                   ${formState.loading ? 'opacity-50' : ''}
                   ${

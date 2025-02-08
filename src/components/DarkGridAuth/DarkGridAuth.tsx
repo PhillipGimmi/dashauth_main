@@ -138,14 +138,14 @@ const Heading = ({ mode, onToggleMode }: { mode: AuthMode; onToggleMode: () => v
                   {(mode === 'signin' ? ['Create', 'one.'] : ['Sign', 'in', 'instead.']).map(
                     (word, wordIndex) => (
                       <motion.span
-                        key={wordIndex}
+                        key={`${mode}-word-${word}`}
                         className="inline-block whitespace-nowrap"
                         initial={{}}
                         animate={{ transition: { staggerChildren: 0.02 } }}
                       >
                         {word.split('').map((letter, letterIndex) => (
                           <motion.span
-                            key={letterIndex}
+                            key={`${mode}-${word}-${letter}-${letterIndex}`}
                             className="inline-block"
                             variants={{
                               initial: { opacity: 0, y: 20, filter: 'blur(8px)' },

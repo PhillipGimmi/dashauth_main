@@ -12,7 +12,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { readonly children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light');
+  const [theme, setTheme] = useState<Theme>('dark');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -25,28 +25,16 @@ export function ThemeProvider({ children }: { readonly children: React.ReactNode
         setTheme(storedTheme);
         document.documentElement.classList.toggle('dark', storedTheme === 'dark');
       } else {
-        // Check system preference
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const newTheme: Theme = systemPrefersDark ? 'dark' : 'light';
-        setTheme(newTheme);
-        document.documentElement.classList.toggle('dark', systemPrefersDark);
+        // Default to dark theme instead of checking system preference
+        setTheme('dark');
+        document.documentElement.classList.add('dark'); // Ensure dark class is added
       }
     };
 
     initializeTheme();
 
-    // Add listener for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem('theme')) {
-        const newTheme: Theme = e.matches ? 'dark' : 'light';
-        setTheme(newTheme);
-        document.documentElement.classList.toggle('dark', e.matches);
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    // Remove system preference check since we want to default to dark
+    // Keep the media query listener in case you want to add it back later
   }, []);
 
   const handleThemeChange = (newTheme: Theme) => {

@@ -31,3 +31,11 @@ export interface VerificationPayload {
   clientId: string;
   timestamp?: number;
 }
+
+export interface DomainVerification {
+  domain: string;
+  verified: boolean;
+  // Add other relevant fields
+}
+
+// Add other types as needed

@@ -90,11 +90,10 @@ interface RecentActivity {
   id: string;
   type: ActivityType;
   user: string;
-  time: string;
+  timestamp: string;
   location: string;
   status: ActivityStatus;
   icon: LucideIcon;
-  timestamp: string;
 }
 
 interface ChartData {
@@ -143,57 +142,36 @@ const getRelativeTime = (timestamp: string): string => {
     return 'Date error';
   }
 };
+
 const generateDummyTimeData = (timeRange: TimeRangeType): TimeData[] => {
   const baseUsers = 1200;
   const baseLogins = 850;
   const baseSignups = 45;
   const baseResponse = 120;
 
+  const generateDataPoint = (
+    timeStr: string,
+    multiplier = 1,
+    responseVariation = { min: 0.9, max: 1.1 }
+  ): TimeData => ({
+    time: timeStr,
+    users: Math.round(baseUsers * multiplier),
+    logins: Math.round(baseLogins * multiplier),
+    signups: Math.round(baseSignups * multiplier),
+    responseTime: Math.round(
+      baseResponse * (responseVariation.min + Math.random() * (responseVariation.max - responseVariation.min))
+    ),
+  });
+
   switch (timeRange) {
     case '24h':
       return [
-        {
-          time: '00:00',
-          users: 1200,
-          logins: 850,
-          signups: 45,
-          responseTime: 120,
-        },
-        {
-          time: '04:00',
-          users: 1400,
-          logins: 940,
-          signups: 65,
-          responseTime: 115,
-        },
-        {
-          time: '08:00',
-          users: 2100,
-          logins: 1540,
-          signups: 95,
-          responseTime: 125,
-        },
-        {
-          time: '12:00',
-          users: 2800,
-          logins: 1890,
-          signups: 120,
-          responseTime: 135,
-        },
-        {
-          time: '16:00',
-          users: 2600,
-          logins: 1740,
-          signups: 110,
-          responseTime: 130,
-        },
-        {
-          time: '20:00',
-          users: 1800,
-          logins: 1240,
-          signups: 75,
-          responseTime: 125,
-        },
+        generateDataPoint('00:00', 1),
+        generateDataPoint('04:00', 1.2),
+        generateDataPoint('08:00', 1.8),
+        generateDataPoint('12:00', 2.3),
+        generateDataPoint('16:00', 2.2),
+        generateDataPoint('20:00', 1.5),
       ];
 
     case '7d':
@@ -201,15 +179,7 @@ const generateDummyTimeData = (timeRange: TimeRangeType): TimeData[] => {
         const day = new Date();
         day.setDate(day.getDate() - (6 - i));
         const dayName = day.toLocaleDateString('en-US', { weekday: 'short' });
-        const multiplier = 0.8 + Math.random() * 0.4;
-
-        return {
-          time: dayName,
-          users: Math.round(baseUsers * 1.5 * multiplier),
-          logins: Math.round(baseLogins * 1.5 * multiplier),
-          signups: Math.round(baseSignups * 1.2 * multiplier),
-          responseTime: Math.round(baseResponse * (0.9 + Math.random() * 0.2)),
-        };
+        return generateDataPoint(dayName, 1.5 * (0.8 + Math.random() * 0.4));
       });
 
     case '30d':
@@ -217,15 +187,7 @@ const generateDummyTimeData = (timeRange: TimeRangeType): TimeData[] => {
         const hour = new Date();
         hour.setHours(hour.getHours() - (30 * 24 - i));
         const hourStr = `${hour.getMonth() + 1}/${hour.getDate()} ${hour.getHours()}:00`;
-        const multiplier = 0.7 + Math.random() * 0.6;
-
-        return {
-          time: hourStr,
-          users: Math.round(baseUsers * 2 * multiplier),
-          logins: Math.round(baseLogins * 2 * multiplier),
-          signups: Math.round(baseSignups * 1.5 * multiplier),
-          responseTime: Math.round(baseResponse * (0.85 + Math.random() * 0.3)),
-        };
+        return generateDataPoint(hourStr, 2 * (0.7 + Math.random() * 0.6));
       });
 
     case '90d':
@@ -233,15 +195,7 @@ const generateDummyTimeData = (timeRange: TimeRangeType): TimeData[] => {
         const day = new Date();
         day.setDate(day.getDate() - (89 - i));
         const dayStr = `${day.getMonth() + 1}/${day.getDate()}`;
-        const multiplier = 0.6 + Math.random() * 0.8;
-
-        return {
-          time: dayStr,
-          users: Math.round(baseUsers * 2.5 * multiplier),
-          logins: Math.round(baseLogins * 2.5 * multiplier),
-          signups: Math.round(baseSignups * 2 * multiplier),
-          responseTime: Math.round(baseResponse * (0.8 + Math.random() * 0.4)),
-        };
+        return generateDataPoint(dayStr, 2.5 * (0.6 + Math.random() * 0.8));
       });
   }
 };
@@ -335,61 +289,37 @@ const MOCK_DATA: ChartData = {
       type: 'Login',
       user: 'john.doe@example.com',
       timestamp: '2024-03-06T10:30:00Z',
-      time: '2 minutes ago',
       location: 'San Francisco, US',
       status: 'success',
-      icon: ACTIVITY_ICONS['Login'],
+      icon: ACTIVITY_ICONS['Login']
     },
     {
       id: 'act2',
       type: '2FA Verification',
       user: 'jane.smith@example.com',
       timestamp: '2024-03-06T10:28:00Z',
-      time: '5 minutes ago',
       location: 'London, UK',
       status: 'warning',
-      icon: ACTIVITY_ICONS['2FA Verification'],
+      icon: ACTIVITY_ICONS['2FA Verification']
     },
     {
       id: 'act3',
       type: 'Logout',
       user: 'bob.wilson@example.com',
       timestamp: '2024-03-06T10:25:00Z',
-      time: '10 minutes ago',
       location: 'Sydney, AU',
       status: 'success',
-      icon: ACTIVITY_ICONS['Logout'],
+      icon: ACTIVITY_ICONS['Logout']
     },
     {
       id: 'act4',
       type: 'Password Change',
       user: 'alice.johnson@example.com',
       timestamp: '2024-03-06T10:20:00Z',
-      time: '15 minutes ago',
       location: 'Toronto, CA',
       status: 'error',
-      icon: ACTIVITY_ICONS['Password Change'],
-    },
-    {
-      id: 'act5',
-      type: 'Password Change',
-      user: 'alice.johnson@example.com',
-      timestamp: '2024-03-06T10:20:00Z',
-      time: '15 minutes ago',
-      location: 'Toronto, CA',
-      status: 'error',
-      icon: ACTIVITY_ICONS['Password Change'],
-    },
-    {
-      id: 'act6',
-      type: 'Password Change',
-      user: 'alice.johnson@example.com',
-      timestamp: '2024-03-06T10:20:00Z',
-      time: '15 minutes ago',
-      location: 'Toronto, CA',
-      status: 'error',
-      icon: ACTIVITY_ICONS['Password Change'],
-    },
+      icon: ACTIVITY_ICONS['Password Change']
+    }
   ],
 };
 
@@ -474,53 +404,20 @@ const Dashboard = ({ isConfigured = true }: DashboardProps) => {
         <div className="flex-1 p-4 sm:p-6 flex flex-col lg:flex-row gap-6 overflow-auto">
           {/* First Column */}
           <div className="w-full lg:w-1/3 min-w-[300px] space-y-6">
-            {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4">
-              {MOCK_DATA.stats
-                .slice(0, 2)
-                .map((stat: AuthStats, index: number) => (
-                  <StatsCard
-                    key={stat.label}
-                    stat={stat}
-                    index={index}
-                    isSelected={selectedCard === index}
-                    onSelect={() => handleCardSelection(index)}
-                  />
-                ))}
-            </div> */}
             <ChartCard
               title="Authentication Activity"
               subtitle="Real-time user authentication tracking"
-              chart={
-                <ActivityChart timeRange={timeRange} data={filteredData} />
-              }
+              chart={<ActivityChart timeRange={timeRange} data={filteredData} />}
             />
             <ChartCard
               title="Geographic Distribution"
               subtitle="User distribution and MFA adoption by country"
-              chart={
-                <GeographicDistribution
-                  data={MOCK_DATA.locationData}
-                  primaryColor="#10B981"
-                />
-              }
+              chart={<GeographicDistribution data={MOCK_DATA.locationData} primaryColor="#10B981" />}
             />
           </div>
 
           {/* Second Column */}
           <div className="w-full lg:w-1/3 min-w-[300px] space-y-6">
-            {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4">
-              {MOCK_DATA.stats
-                .slice(2, 4)
-                .map((stat: AuthStats, index: number) => (
-                  <StatsCard
-                    key={stat.label}
-                    stat={stat}
-                    index={index + 2}
-                    isSelected={selectedCard === index + 2}
-                    onSelect={() => handleCardSelection(index + 2)}
-                  />
-                ))}
-            </div> */}
             <ChartCard
               title="Authentication Methods"
               subtitle="Distribution and trends of authentication methods"

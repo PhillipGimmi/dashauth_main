@@ -23,8 +23,6 @@
   --glow-hue: 222deg;
   --shadow-hue: 180deg;
   --bg: rgb(27, 23, 36);
-  --card-height: 65vh;
-  --card-width: calc(var(--card-height) / 1.5);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -46,24 +44,19 @@
 }
 
 .input-gradient {
-  @apply bg-gradient-to-r from-transparent to-[#18181bcc] dark:bg-gradient-to-r dark:from-transparent dark:to-white;
+  @apply dark:bg-gradient-to-r dark:from-transparent dark:to-white bg-gradient-to-r from-transparent to-[#18181bcc];
 }
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
 }
 
 @property --mask {
   syntax: '<angle>';
   inherits: false;
   initial-value: 33deg;
-}
-
-@property --rotate {
-  syntax: '<angle>';
-  initial-value: 132deg;
-  inherits: false;
 }
 
 @keyframes fadeIn {
@@ -75,10 +68,10 @@ body {
 
 @keyframes spin {
   0% {
-    --rotate: 0deg;
+    --mask: 0deg;
   }
   100% {
-    --rotate: 360deg;
+    --mask: 360deg;
   }
 }
 
@@ -222,7 +215,12 @@ body {
 }
 
 .shimmer-button:not([disabled])[data-effect='wipe'] .shimmer {
-  mask-image: linear-gradient(90deg, transparent 20%, black 88%, transparent 90%);
+  mask-image: linear-gradient(
+    90deg,
+    transparent 20%,
+    black 88%,
+    transparent 90%
+  );
   mask-size: 200% 200%;
   animation: wipe 1.5s linear infinite both -0.5s;
 }
@@ -311,95 +309,4 @@ body {
   100% {
     opacity: 1;
   }
-}
-
-.card {
-  background: rgba(25, 28, 41, 0.95);
-  position: relative;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.05),
-    0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  transform-origin: center center;
-  will-change: transform, opacity, box-shadow;
-}
-
-/* Dark mode using Tailwind's dark: class */
-:is(.dark .card) {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-/* Success state with animation */
-.card.success {
-  border-color: rgba(11, 191, 17, 0.3);
-  box-shadow: 0 0 20px rgba(11, 191, 17, 0.1);
-  animation: successPulse 2s infinite;
-}
-
-/* Error state with animation */
-.card.error {
-  border-color: rgba(220, 38, 38, 0.3);
-  box-shadow: 0 0 20px rgba(220, 38, 38, 0.1);
-  animation: errorPulse 2s infinite;
-}
-
-@keyframes successPulse {
-  0% {
-    box-shadow: 0 0 20px rgba(11, 191, 17, 0.1);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(11, 191, 17, 0.2);
-  }
-  100% {
-    box-shadow: 0 0 20px rgba(11, 191, 17, 0.1);
-  }
-}
-
-@keyframes errorPulse {
-  0% {
-    box-shadow: 0 0 20px rgba(220, 38, 38, 0.1);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(220, 38, 38, 0.2);
-  }
-  100% {
-    box-shadow: 0 0 20px rgba(220, 38, 38, 0.1);
-  }
-}
-
-@keyframes spin {
-  0% {
-    --rotate: 0deg;
-  }
-  100% {
-    --rotate: 360deg;
-  }
-}
-
-/* Hide scrollbar but keep functionality */
-* {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-}
-
-/* Hide scrollbar for Chrome/Safari */
-*::-webkit-scrollbar {
-  display: none;
-}
-
-/* Ensure proper scrolling behavior for all containers */
-html,
-body {
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-/* Add smooth scrolling */
-html {
-  scroll-behavior: smooth;
 }

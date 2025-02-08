@@ -57,9 +57,9 @@ const BubbleText = ({ children }: { children: string }) => {
       {children.split('').map((char, idx) => (
         <span
           style={{
-            transition: '0.35s color', // Removed font-weight transition
+            transition: '0.35s color',
           }}
-          key={idx}
+          key={`${children}-${char}-${idx}`}
         >
           {char}
         </span>

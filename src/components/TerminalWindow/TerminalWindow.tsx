@@ -32,30 +32,36 @@ const TerminalWindow = ({ messages, onComplete }: TerminalWindowProps) => {
     };
   }, []);
 
+  const handleVisibleLines = () => {
+    setVisibleLines((prev) => {
+      if (prev < messages.length) {
+        return prev + 1;
+      }
+      if (!completedRef.current) {
+        completedRef.current = true;
+        Promise.resolve().then(() => onComplete?.());
+      }
+      if (timerRef.current) clearInterval(timerRef.current);
+      return prev;
+    });
+  };
+
+  const startMessageAnimation = () => {
+    const interval = setInterval(() => {
+      if (!isPausedRef.current) {
+        handleVisibleLines();
+      }
+    }, 2000);
+    
+    timerRef.current = interval;
+  };
+
   useEffect(() => {
     setVisibleLines(0);
     completedRef.current = false;
     if (timerRef.current) clearInterval(timerRef.current);
 
-    const timeoutId = setTimeout(() => {
-      const interval = setInterval(() => {
-        if (!isPausedRef.current) {
-          setVisibleLines((prev) => {
-            if (prev < messages.length) {
-              return prev + 1;
-            }
-            if (!completedRef.current) {
-              completedRef.current = true;
-              Promise.resolve().then(() => onComplete?.());
-            }
-            clearInterval(interval);
-            return prev;
-          });
-        }
-      }, 2000);
-
-      timerRef.current = interval;
-    }, 0);
+    const timeoutId = setTimeout(startMessageAnimation, 0);
 
     return () => {
       clearTimeout(timeoutId);
