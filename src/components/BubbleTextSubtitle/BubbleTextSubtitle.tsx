@@ -8,28 +8,28 @@ const BubbleTextSubtitle = ({ text }: { text: string }) => {
     spans.forEach((span) => {
       if (span instanceof HTMLSpanElement) {
         span.addEventListener('mouseenter', () => {
-          span.classList.add('text-white'); // No font-weight adjustments
+          span.classList.add('text-white', 'dark:text-black');
           const leftNeighbor = span.previousElementSibling;
           const rightNeighbor = span.nextElementSibling;
 
           if (leftNeighbor instanceof HTMLSpanElement) {
-            leftNeighbor.classList.add('text-gray-300');
+            leftNeighbor.classList.add('text-gray-300', 'dark:text-gray-700');
           }
           if (rightNeighbor instanceof HTMLSpanElement) {
-            rightNeighbor.classList.add('text-gray-300');
+            rightNeighbor.classList.add('text-gray-300', 'dark:text-gray-700');
           }
         });
 
         span.addEventListener('mouseleave', () => {
-          span.classList.remove('text-white');
+          span.classList.remove('text-white', 'dark:text-black');
           const leftNeighbor = span.previousElementSibling;
           const rightNeighbor = span.nextElementSibling;
 
           if (leftNeighbor instanceof HTMLSpanElement) {
-            leftNeighbor.classList.remove('text-gray-300');
+            leftNeighbor.classList.remove('text-gray-300', 'dark:text-gray-700');
           }
           if (rightNeighbor instanceof HTMLSpanElement) {
-            rightNeighbor.classList.remove('text-gray-300');
+            rightNeighbor.classList.remove('text-gray-300', 'dark:text-gray-700');
           }
         });
       }
@@ -44,7 +44,7 @@ const BubbleTextSubtitle = ({ text }: { text: string }) => {
       }}
       initial="initial"
       animate="animate"
-      className="hover-text text-2xl font-light text-gray-400 sm:text-3xl lg:text-4xl 2xl:text-5xl"
+      className="hover-text text-2xl font-light text-gray-400 dark:text-gray-600 sm:text-3xl lg:text-4xl 2xl:text-5xl"
     >
       <BubbleText>{text}</BubbleText>
     </motion.span>

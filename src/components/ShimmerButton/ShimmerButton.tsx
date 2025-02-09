@@ -1,6 +1,5 @@
 'use client';
 
-import { ArrowRight } from 'lucide-react';
 import React from 'react';
 import Link from 'next/link';
 import styles from './ShimmerButton.module.css';
@@ -20,10 +19,7 @@ const ShimmerButton = ({ text = 'Get Started', href, onClick }: ShimmerButtonPro
           className={`${styles.shimmer_btn} relative mb-4 w-full px-8 py-3.5`}
           style={{ pointerEvents: 'auto' }}
         >
-          <span className={styles.text}>
-            {text}
-            <ArrowRight className="ml-2 inline-block h-5 w-5" />
-          </span>
+          <span className={styles.text}>{text}</span>
           <span className={styles.shimmer}></span>
         </button>
       </Link>

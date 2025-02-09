@@ -1,0 +1,47 @@
+:root {
+  /* Light mode variables */
+  --color-background: #ffffff;
+  --color-background-surface: #f8f9fa;
+  --color-background-overlay: rgba(255, 255, 255, 0.8);
+
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #4a4a4a;
+  --color-text-muted: #6e6e6e;
+
+  --color-border: #e5e7eb;
+  --color-border-hover: #d1d5db;
+
+  --color-grid: rgba(0, 0, 0, 0.1);
+
+  --color-sparkle-glow: rgba(255, 255, 255, 0.8);
+  --color-sparkle-standard: rgba(255, 255, 255, 0.95);
+  --color-sparkle-intense: #ffffff;
+
+  --color-indicator-success: #22c55e;
+  --color-indicator-error: #ef4444;
+  --color-indicator-neutral: #6b7280;
+}
+
+.dark {
+  /* Dark mode variables */
+  --color-background: #000000;
+  --color-background-surface: #111111;
+  --color-background-overlay: rgba(0, 0, 0, 0.8);
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #d4d4d4;
+  --color-text-muted: #a3a3a3;
+
+  --color-border: #2e2e2e;
+  --color-border-hover: #404040;
+
+  --color-grid: rgba(255, 255, 255, 0.1);
+
+  --color-sparkle-glow: rgba(0, 0, 0, 0.8);
+  --color-sparkle-standard: rgba(0, 0, 0, 0.95);
+  --color-sparkle-intense: #000000;
+
+  --color-indicator-success: #4ade80;
+  --color-indicator-error: #f87171;
+  --color-indicator-neutral: #9ca3af;
+}

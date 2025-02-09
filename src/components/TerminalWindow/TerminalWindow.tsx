@@ -17,12 +17,14 @@ const TerminalWindow = ({ messages, onComplete }: TerminalWindowProps) => {
   const [isInteractive, setIsInteractive] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
-  const [isHovered, setIsHovered] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const completedRef = useRef(false);
   const isPausedRef = useRef(false);
   const terminalContentRef = useRef<HTMLDivElement>(null);
   const lastScrollPositionRef = useRef(0);
+
+  // Add a key to force reset when messages change
+  const messagesKey = JSON.stringify(messages);
 
   const handleVisibleLines = useCallback(() => {
     setVisibleLines((prev) => {
@@ -61,13 +63,14 @@ const TerminalWindow = ({ messages, onComplete }: TerminalWindowProps) => {
     completedRef.current = false;
     if (timerRef.current) clearInterval(timerRef.current);
 
-    const timeoutId = setTimeout(startMessageAnimation, 0);
+    // Small delay before starting new animation
+    const timeoutId = setTimeout(startMessageAnimation, 300);
 
     return () => {
       clearTimeout(timeoutId);
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [messages, onComplete, startMessageAnimation]);
+  }, [messagesKey, startMessageAnimation]);
 
   useEffect(() => {
     if (terminalContentRef.current) {
@@ -79,9 +82,8 @@ const TerminalWindow = ({ messages, onComplete }: TerminalWindowProps) => {
   }, [commandHistory]);
 
   useEffect(() => {
-    isPausedRef.current = isHovered;
-    setIsInteractive(isHovered);
-  }, [isHovered]);
+    isPausedRef.current = isInteractive;
+  }, [isInteractive]);
 
   const handleScroll = () => {
     if (terminalContentRef.current) {
@@ -108,40 +110,36 @@ const TerminalWindow = ({ messages, onComplete }: TerminalWindowProps) => {
   if (!mounted) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      whileHover={{ scale: 1.01 }}
-      className="flex h-[530px] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-gray-700/50 bg-gray-900/95 shadow-2xl backdrop-blur-md"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+    <div
+      className="flex h-[530px] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-gray-700/50 bg-gray-900/95 shadow-2xl backdrop-blur-md dark:border-gray-300/50 dark:bg-white/95"
+      onMouseEnter={() => setIsInteractive(true)}
+      onMouseLeave={() => setIsInteractive(false)}
     >
-      <div className="flex flex-shrink-0 items-center border-b border-gray-700/50 bg-gray-800/90 px-4 py-3">
+      <div className="flex flex-shrink-0 items-center border-b border-gray-700/50 bg-gray-800/90 px-4 py-3 dark:border-gray-300/50 dark:bg-gray-100/90">
         <div className="flex gap-2">
           <motion.div
-            className="group relative h-3.5 w-3.5 cursor-pointer rounded-full bg-gray-400/90"
+            className="group relative h-3.5 w-3.5 cursor-pointer rounded-full bg-gray-400/90 dark:bg-gray-600/90"
             whileHover={{ scale: 1.2 }}
             whileTap={{ scale: 0.9 }}
           >
             <X className="absolute inset-0 h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-50" />
           </motion.div>
           <motion.div
-            className="group relative h-3.5 w-3.5 cursor-pointer rounded-full bg-gray-500/90"
+            className="group relative h-3.5 w-3.5 cursor-pointer rounded-full bg-gray-500/90 dark:bg-gray-500/90"
             whileHover={{ scale: 1.2 }}
             whileTap={{ scale: 0.9 }}
           >
             <Minus className="absolute inset-0 h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-50" />
           </motion.div>
           <motion.div
-            className="group relative h-3.5 w-3.5 cursor-pointer rounded-full bg-gray-600/90"
+            className="group relative h-3.5 w-3.5 cursor-pointer rounded-full bg-gray-600/90 dark:bg-gray-400/90"
             whileHover={{ scale: 1.2 }}
             whileTap={{ scale: 0.9 }}
           >
             <Square className="absolute inset-0 h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-50" />
           </motion.div>
         </div>
-        <span className="ml-4 font-mono text-lg font-medium text-gray-200">
+        <span className="ml-4 font-mono text-lg font-medium text-gray-200 dark:text-gray-800">
           <span className="hidden sm:inline">dash-auth-terminal</span>
           <span className="inline sm:hidden">terminal</span>
         </span>
@@ -150,14 +148,22 @@ const TerminalWindow = ({ messages, onComplete }: TerminalWindowProps) => {
       <div
         ref={terminalContentRef}
         onScroll={handleScroll}
-        className="scrollbar-thin scrollbar-track-gray-800/50 scrollbar-thumb-gray-600/50 hover:scrollbar-thumb-gray-500/50 flex-1 space-y-2 overflow-y-auto p-6 font-mono text-base transition-colors [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-600/50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-800/50 [&::-webkit-scrollbar]:w-2.5"
+        className="scrollbar-thin scrollbar-track-gray-800/50 scrollbar-thumb-gray-600/50 hover:scrollbar-thumb-gray-500/50 dark:scrollbar-track-gray-200/50 dark:scrollbar-thumb-gray-400/50 dark:hover:scrollbar-thumb-gray-500/50 flex-1 space-y-2 overflow-y-auto p-6 font-mono text-base transition-colors [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-600/50 dark:[&::-webkit-scrollbar-thumb]:bg-gray-400/50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-800/50 dark:[&::-webkit-scrollbar-track]:bg-gray-200/50 [&::-webkit-scrollbar]:w-2.5"
       >
-        <AnimatePresence>
-          {messages
-            ?.slice(0, visibleLines)
-            .map((message, index) => (
-              <TerminalLine key={`msg-${message}-${index}`} text={message} index={index} />
-            ))}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={messagesKey}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {messages
+              ?.slice(0, visibleLines)
+              .map((message, index) => (
+                <TerminalLine key={`msg-${message}-${index}`} text={message} index={index} />
+              ))}
+          </motion.div>
         </AnimatePresence>
 
         <AnimatePresence>
@@ -170,9 +176,9 @@ const TerminalWindow = ({ messages, onComplete }: TerminalWindowProps) => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mt-4 flex items-center gap-3 text-gray-100"
+            className="mt-4 flex items-center gap-3 text-gray-100 dark:text-gray-800"
           >
-            <ChevronRight className="h-5 w-5 text-green-400" />
+            <ChevronRight className="h-5 w-5 text-green-400 dark:text-green-500" />
             <input
               type="text"
               value={inputValue}
@@ -182,14 +188,14 @@ const TerminalWindow = ({ messages, onComplete }: TerminalWindowProps) => {
                   handleCommand(inputValue);
                 }
               }}
-              className="flex-1 border-none bg-transparent font-mono text-base text-gray-100 placeholder-gray-500 outline-none"
+              className="flex-1 border-none bg-transparent font-mono text-base text-gray-100 antialiased placeholder-gray-500/70 outline-none dark:text-gray-800 dark:placeholder-gray-400/70"
               placeholder="Type 'help' for available commands..."
               autoFocus
             />
           </motion.div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

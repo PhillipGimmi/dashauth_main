@@ -22,7 +22,7 @@ const MenuIcon = ({ isOpen }: { isOpen: boolean }) => (
         y: isOpen ? 8 : 0,
       }}
       transition={{ duration: 0.2 }}
-      className="absolute left-0 top-0 h-0.5 w-6 origin-center transform bg-neutral-50"
+      className="absolute left-0 top-0 h-0.5 w-6 origin-center transform bg-neutral-50 dark:bg-neutral-900"
     />
     <motion.span
       animate={{
@@ -30,7 +30,7 @@ const MenuIcon = ({ isOpen }: { isOpen: boolean }) => (
         x: isOpen ? 8 : 0,
       }}
       transition={{ duration: 0.2 }}
-      className="absolute left-0 top-[11px] h-0.5 w-6 bg-neutral-50"
+      className="absolute left-0 top-[11px] h-0.5 w-6 bg-neutral-50 dark:bg-neutral-900"
     />
     <motion.span
       animate={{
@@ -38,36 +38,10 @@ const MenuIcon = ({ isOpen }: { isOpen: boolean }) => (
         y: isOpen ? -8 : 0,
       }}
       transition={{ duration: 0.2 }}
-      className="absolute bottom-0 left-0 h-0.5 w-6 origin-center transform bg-neutral-50"
+      className="absolute bottom-0 left-0 h-0.5 w-6 origin-center transform bg-neutral-50 dark:bg-neutral-900"
     />
   </motion.div>
 );
-
-// NavLink component stays the same
-const NavLink = ({
-  href,
-  children,
-  onClick,
-}: {
-  href: string;
-  children: string;
-  onClick?: () => void;
-}) => {
-  return (
-    <Link href={href} className="block overflow-hidden" onClick={onClick}>
-      <motion.div
-        whileHover={{ y: -20 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-        className="h-[20px]"
-      >
-        <span className="flex h-[20px] items-center text-sm text-neutral-500">{children}</span>
-        <span className="flex h-[20px] items-center text-sm text-neutral-50 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-          {children}
-        </span>
-      </motion.div>
-    </Link>
-  );
-};
 
 // Updated AuthButton component to handle both mobile and desktop styles
 const AuthButton = ({ isMobile, onClose }: { isMobile?: boolean; onClose?: () => void }) => {
@@ -83,9 +57,9 @@ const AuthButton = ({ isMobile, onClose }: { isMobile?: boolean; onClose?: () =>
   }
 
   const mobileClassName =
-    'px-8 py-2 rounded-lg text-neutral-50 border border-neutral-700 text-sm font-medium';
+    'px-8 py-2 rounded-lg text-neutral-50 dark:text-neutral-900 border border-neutral-700 dark:border-neutral-300 text-sm font-medium';
   const desktopClassName =
-    "relative z-0 flex items-center gap-2 overflow-hidden whitespace-nowrap rounded-lg border-[1px] border-neutral-700 px-4 py-1.5 font-medium text-neutral-300 transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-neutral-50 before:transition-transform before:duration-1000 before:content-[''] hover:scale-105 hover:border-neutral-50 hover:text-neutral-900 hover:before:translate-y-[0%] active:scale-100";
+    "relative z-0 flex items-center gap-2 overflow-hidden whitespace-nowrap rounded-lg border-[1px] border-neutral-700 dark:border-black/40 px-4 py-1.5 font-medium text-neutral-300 dark:text-neutral-700 transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-neutral-50 dark:before:bg-neutral-900 before:transition-transform before:duration-1000 before:content-[''] hover:scale-105 hover:border-neutral-50 dark:hover:border-neutral-900 hover:text-neutral-900 dark:hover:text-neutral-50 hover:before:translate-y-[0%] active:scale-100";
 
   if (user) {
     return (
@@ -126,7 +100,7 @@ const MobileMenu = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         pointerEvents: isOpen ? 'auto' : 'none',
       }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-40 bg-black/95 backdrop-blur-lg"
+      className="fixed inset-0 z-40 bg-black/95 backdrop-blur-lg dark:bg-white/95"
     >
       <motion.div
         initial={{ y: -32, opacity: 0 }}
@@ -219,7 +193,7 @@ const MobileNavigation = ({
   <>
     <div className="h-[52px]" />
     <header className="fixed left-0 right-0 top-0 z-50">
-      <nav className="w-full border-b border-neutral-50/5 bg-black/80 backdrop-blur-lg">
+      <nav className="w-full border-b border-neutral-50/5 bg-black/80 backdrop-blur-lg dark:border-neutral-900/5 dark:bg-white/80">
         <div className="flex items-center justify-between px-4 py-3">
           <Link href="/" className="flex items-center">
             <motion.div
@@ -232,7 +206,7 @@ const MobileNavigation = ({
                 viewBox="0 0 50 39"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="fill-neutral-50"
+                className="fill-neutral-50 dark:fill-neutral-900"
               >
                 <path d="M16.4992 2H37.5808L22.0816 24.9729H1L16.4992 2Z" />
                 <path d="M17.4224 27.102L11.4192 36H33.5008L49 13.0271H32.7024L23.2064 27.102H17.4224Z" />
@@ -281,13 +255,14 @@ const DesktopNavigation = ({
       }}
     >
       <motion.nav
-        className="pointer-events-auto flex w-full items-center justify-between"
+        className={`pointer-events-auto flex w-full items-center justify-between border-neutral-50/5 bg-black/80 shadow-lg backdrop-blur-lg dark:border-neutral-900/5 dark:bg-white/80 ${
+          hasScrolled
+            ? 'border border-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.1)] dark:border-black/10 dark:shadow-[0_0_0_1px_rgba(0,0,0,0.1)]'
+            : 'border-b border-white/5 dark:border-black/5'
+        }`}
         initial={false}
         animate={{
           y: hasScrolled ? 24 : 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          borderBottom: hasScrolled ? 'none' : '1px solid rgba(255, 255, 255, 0.05)',
-          border: hasScrolled ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
           borderRadius: hasScrolled ? '0.75rem' : '0',
           padding: hasScrolled ? '0.75rem' : '0.5rem 1.5rem',
         }}
@@ -307,7 +282,7 @@ const DesktopNavigation = ({
               viewBox="0 0 50 39"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="fill-neutral-50"
+              className="fill-neutral-50 dark:fill-neutral-900"
             >
               <path d="M16.4992 2H37.5808L22.0816 24.9729H1L16.4992 2Z" />
               <path d="M17.4224 27.102L11.4192 36H33.5008L49 13.0271H32.7024L23.2064 27.102H17.4224Z" />
@@ -325,6 +300,34 @@ const DesktopNavigation = ({
     </motion.div>
   </motion.div>
 );
+
+// Updated NavLink component
+const NavLink = ({
+  href,
+  children,
+  onClick,
+}: {
+  href: string;
+  children: string;
+  onClick?: () => void;
+}) => {
+  return (
+    <Link href={href} className="block overflow-hidden" onClick={onClick}>
+      <motion.div
+        whileHover={{ y: -20 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+        className="h-[20px]"
+      >
+        <span className="flex h-[20px] items-center text-sm text-neutral-500 dark:text-neutral-600">
+          {children}
+        </span>
+        <span className="flex h-[20px] items-center text-sm text-neutral-50 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] dark:text-neutral-900 dark:drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+          {children}
+        </span>
+      </motion.div>
+    </Link>
+  );
+};
 
 // Simplified FloatingNav component
 const FloatingNav = () => {

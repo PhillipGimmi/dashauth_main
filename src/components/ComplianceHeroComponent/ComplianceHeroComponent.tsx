@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, ChevronRight } from 'lucide-react';
 
@@ -99,37 +99,37 @@ const ComplianceStandard: React.FC<ComplianceStandardProps> = ({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="group relative transform cursor-pointer touch-manipulation overflow-hidden rounded-lg border border-gray-800 bg-gray-900 transition-transform duration-100 hover:scale-[0.99] active:scale-[0.98] md:hover:scale-[0.99] md:active:scale-[0.98]"
+        className="group relative transform cursor-pointer touch-manipulation overflow-hidden rounded-lg bg-gray-900 transition-transform duration-100 hover:scale-[0.99] active:scale-[0.98] dark:bg-gray-100 md:hover:scale-[0.99] md:active:scale-[0.98]"
       >
         <div className="hidden md:block">
           {!isExpanded && (
             <>
-              <div className="absolute inset-0 -translate-x-[101%] transform bg-white/50 transition-transform duration-500 ease-out group-hover:translate-x-0" />
-              <div className="absolute inset-0 -translate-x-[101%] transform bg-white/50 transition-transform delay-75 duration-500 ease-out group-hover:translate-x-0" />
-              <div className="absolute inset-0 -translate-x-[101%] transform bg-white transition-transform delay-150 duration-500 ease-out group-hover:translate-x-0" />
+              <div className="absolute inset-0 -translate-x-[101%] transform bg-white/50 transition-transform duration-500 ease-out group-hover:translate-x-0 dark:bg-black/50" />
+              <div className="absolute inset-0 -translate-x-[101%] transform bg-white/50 transition-transform delay-75 duration-500 ease-out group-hover:translate-x-0 dark:bg-black/50" />
+              <div className="absolute inset-0 -translate-x-[101%] transform bg-white transition-transform delay-150 duration-500 ease-out group-hover:translate-x-0 dark:bg-black" />
             </>
           )}
         </div>
 
-        <div className="absolute inset-0 bg-white/5 opacity-0 transition-opacity duration-150 active:opacity-100 md:hidden" />
+        <div className="absolute inset-0 bg-white/5 opacity-0 transition-opacity duration-150 active:opacity-100 dark:bg-black/5 md:hidden" />
 
         <AnimatePresence>
           {isAnimating && (
             <>
               <motion.div
-                className="absolute inset-0 bg-white/50"
+                className="absolute inset-0 bg-white/50 dark:bg-black/50"
                 initial={{ x: '-101%' }}
                 animate={{ x: '101%' }}
                 transition={{ duration: 0.5, ease: 'easeInOut' }}
               />
               <motion.div
-                className="absolute inset-0 bg-white/50"
+                className="absolute inset-0 bg-white/50 dark:bg-black/50"
                 initial={{ x: '-101%' }}
                 animate={{ x: '101%' }}
                 transition={{ duration: 0.5, ease: 'easeInOut', delay: 0.1 }}
               />
               <motion.div
-                className="absolute inset-0 bg-white"
+                className="absolute inset-0 bg-white dark:bg-black"
                 initial={{ x: '-101%' }}
                 animate={{ x: '101%' }}
                 transition={{ duration: 0.5, ease: 'easeInOut', delay: 0.2 }}
@@ -143,9 +143,9 @@ const ComplianceStandard: React.FC<ComplianceStandardProps> = ({
             <motion.p
               layout
               className={`
-                        text-base font-light text-white transition-colors duration-300 md:text-xl
-                        ${isExpanded ? '' : 'active:text-black md:active:text-white md:group-hover:text-black'}
-                    `}
+                text-base font-light text-white transition-colors duration-300 dark:text-black md:text-xl
+                ${isExpanded ? '' : 'active:text-black dark:active:text-white md:active:text-white md:group-hover:text-black dark:md:group-hover:text-white'}
+              `}
             >
               {standard}
             </motion.p>
@@ -154,9 +154,9 @@ const ComplianceStandard: React.FC<ComplianceStandardProps> = ({
               animate={{ rotate: isExpanded ? 90 : 0 }}
               transition={{ duration: 0.2 }}
               className={`
-                  text-white transition-colors duration-300 md:hidden
-                  ${isExpanded ? 'text-white' : 'active:text-black'}
-                `}
+                text-white transition-colors duration-300 dark:text-black md:hidden
+                ${isExpanded ? 'text-white dark:text-black' : 'active:text-black dark:active:text-white'}
+              `}
             >
               <ChevronRight className="h-5 w-5" />
             </motion.div>
@@ -172,16 +172,20 @@ const ComplianceStandard: React.FC<ComplianceStandardProps> = ({
                 className="mt-4 grid grid-cols-1 gap-4 overflow-hidden md:mt-6 md:gap-6 lg:grid-cols-2"
               >
                 <div>
-                  <h3 className="mb-2 text-xs uppercase tracking-wider text-white/80 md:text-sm">
+                  <h3 className="mb-2 text-xs uppercase tracking-wider text-white/80 dark:text-black/80 md:text-sm">
                     About
                   </h3>
-                  <p className="text-sm text-white/70 md:text-lg">{info.description}</p>
+                  <p className="text-sm text-white/70 dark:text-black/70 md:text-lg">
+                    {info.description}
+                  </p>
                 </div>
                 <div>
-                  <h3 className="mb-2 text-xs uppercase tracking-wider text-white/80 md:text-sm">
+                  <h3 className="mb-2 text-xs uppercase tracking-wider text-white/80 dark:text-black/80 md:text-sm">
                     How We Help
                   </h3>
-                  <p className="text-sm text-white/70 md:text-lg">{info.relevance}</p>
+                  <p className="text-sm text-white/70 dark:text-black/70 md:text-lg">
+                    {info.relevance}
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -195,6 +199,15 @@ const ComplianceStandard: React.FC<ComplianceStandardProps> = ({
 const ComplianceHeroComponent: React.FC<ComplianceSectionProps> = ({ standards }) => {
   const [activeStandard, setActiveStandard] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Add a key to track standards changes
+  const standardsKey = JSON.stringify(standards);
+
+  // Reset state when standards change
+  useEffect(() => {
+    setActiveStandard(null);
+    setIsTransitioning(false);
+  }, [standardsKey]);
 
   const handleStandardToggle = (standard: string) => {
     if (isTransitioning) return;
@@ -213,33 +226,38 @@ const ComplianceHeroComponent: React.FC<ComplianceSectionProps> = ({ standards }
   };
 
   return (
-    <motion.div
-      className="max-w-[900px] overflow-hidden rounded-xl border border-gray-800 bg-black/85 p-4 backdrop-blur-sm md:p-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      onMouseLeave={() => !isTransitioning && window.innerWidth >= 768 && setActiveStandard(null)}
-    >
-      <h2 className="mb-4 flex items-center gap-2 text-lg font-light text-white sm:text-xl md:mb-8 md:gap-3 md:text-3xl">
-        <Shield className="h-5 w-5 text-white md:h-8 md:w-8" />
+    <div className="max-w-[900px] overflow-hidden rounded-xl border border-gray-800 bg-black/85 p-4 backdrop-blur-sm dark:border-white/20 dark:bg-white/85 md:p-6">
+      <h2 className="mb-4 flex items-center gap-2 text-lg font-light text-white dark:text-black sm:text-xl md:mb-8 md:gap-3 md:text-3xl">
+        <Shield className="h-5 w-5 text-white dark:text-black md:h-8 md:w-8" />
         Compliance Standards
       </h2>
 
-      <motion.div layout className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
-        {standards.map((standard) => (
-          <motion.div
-            key={standard}
-            layout
-            className={`${activeStandard === standard ? 'order-first col-span-full w-full' : ''}`}
-          >
-            <ComplianceStandard
-              standard={standard}
-              isExpanded={activeStandard === standard}
-              onToggle={() => handleStandardToggle(standard)}
-            />
-          </motion.div>
-        ))}
-      </motion.div>
-    </motion.div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={standardsKey}
+          layout
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-4 lg:grid-cols-3"
+        >
+          {standards.map((standard) => (
+            <motion.div
+              key={standard}
+              layout
+              className={`${activeStandard === standard ? 'order-first col-span-full w-full' : ''}`}
+            >
+              <ComplianceStandard
+                standard={standard}
+                isExpanded={activeStandard === standard}
+                onToggle={() => handleStandardToggle(standard)}
+              />
+            </motion.div>
+          ))}
+        </motion.div>
+      </AnimatePresence>
+    </div>
   );
 };
 

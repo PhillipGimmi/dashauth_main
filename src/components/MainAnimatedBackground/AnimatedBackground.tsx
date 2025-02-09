@@ -194,18 +194,22 @@ const shaderSource = `#version 300 es
         float spacing;
         
         if (R.x > 768.0) {
-          thickness = 0.15 + 0.05 * sin(T * 0.5 + uv.x);
+          thickness = 0.15 + 0.05 * sin(T * 0.5 + uv.x);  // Same thickness for both modes
           spacing = 4.0;
         } else {
-          thickness = 0.15;
+          thickness = 0.15;  // Same thickness for both modes
           spacing = 2.0;
         }
         
         uv.x += sin(T * (0.25 + i * 0.1) + uv.y * 1.2) * thickness;
         float line = (0.01 + (R.x > 768.0 ? 0.002 : 0.001) * sin(uv.y * 2.0))/abs(uv.x);
         
-        float fogIntensity = fogEffect(uv, 0.5);
-        d += line * (1.0 + fogIntensity * 0.5);
+        if (isDarkMode) {
+            line = step(0.7, line) * 1.0;  // Higher threshold and lower intensity for thinner lines
+        }
+        
+        float fogIntensity = fogEffect(uv, isDarkMode ? 1.0 : 0.5);
+        d += line * (isDarkMode ? 1.0 : 1.0) * (1.0 + fogIntensity * 0.5);
       }
       return d;
     }
@@ -228,8 +232,14 @@ const shaderSource = `#version 300 es
         float fog1 = fogEffect(uv1 + vec2(T * 0.1), 0.3);
         float fog2 = fogEffect(uv2 + vec2(T * 0.1), 0.3);
         
-        col[k] += pattern(uv1 + i * spacing/MN) * intensity * (1.0 + fog1);
-        col[k] += pattern(uv2 + i * spacing/MN) * intensity * (1.0 + fog2);
+        float pattern1 = pattern(uv1 + i * spacing/MN) * intensity * (1.0 + fog1);
+        float pattern2 = pattern(uv2 + i * spacing/MN) * intensity * (1.0 + fog2);
+        
+        if (isDarkMode) {
+            col += (pattern1 + pattern2) * (0.4 + float(k) * 0.1);
+        } else {
+            col[k] += pattern1 + pattern2;
+        }
       }
       return col;
     }
@@ -243,15 +253,20 @@ const shaderSource = `#version 300 es
       vec2 staticUV = uv;
       uv.y += T * 0.25;
       
-      mat2 rot = mat2(cos(PI/4.0), -sin(PI/4.0), sin(PI/4.0), cos(PI/4.0));
-      vec2 rotatedUV = rot * uv;
+      // Dark mode grid with #EEEEEE lines
+      if (isDarkMode) {
+          mat2 rot = mat2(cos(PI/4.0), -sin(PI/4.0), sin(PI/4.0), cos(PI/4.0));
+          vec2 rotatedUV = rot * uv;
+          float gridPattern = max(
+            abs(sin(rotatedUV.x * s)),
+            abs(cos(rotatedUV.y * s))
+          );
+          float grid = step(0.95, gridPattern);
+          // Since we invert colors later, we need to use (1.0 - 0.933) to get #EEEEEE after inversion
+          col = mix(col, vec3(0.067), grid);  // 1.0 - 0.933 = 0.067
+      }
       
-      float gridPattern = max(
-        abs(sin(rotatedUV.x * s)),
-        abs(cos(rotatedUV.y * s))
-      );
-      col += vec3(step(0.95, gridPattern)) * 0.03;
-      
+      // Rest of the effects
       staticUV.y += R.x > R.y ? 0.5 : 0.5 * (R.y/R.x);
       
       float baseFog = fogEffect(uv * 2.0, 0.2);
@@ -262,12 +277,26 @@ const shaderSource = `#version 300 es
       sceneColor *= 1.0 + sceneFog * 0.3;
       col += sceneColor;
       
+      // Light mode grid (unchanged)
+      if (!isDarkMode) {
+          mat2 rot = mat2(cos(PI/4.0), -sin(PI/4.0), sin(PI/4.0), cos(PI/4.0));
+          vec2 rotatedUV = rot * uv;
+          float gridPattern = max(
+            abs(sin(rotatedUV.x * s)),
+            abs(cos(rotatedUV.y * s))
+          );
+          col += vec3(step(0.95, gridPattern)) * 0.03;
+      }
+      
+      // No multiplication by 0.6 for the grid in dark mode
       vec3 finalColor = col * 0.6;
       if (isDarkMode) {
           finalColor = vec3(1.0) - finalColor;
       }
       
-      O = vec4(finalColor, 0.15);
+      // Use full opacity (1.0) in dark mode to get pure fucking black
+      float alpha = isDarkMode ? 1.0 : 0.15;
+      O = vec4(finalColor, alpha);
     }`;
 
 const AnimatedBackground = () => {

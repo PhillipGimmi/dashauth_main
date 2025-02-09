@@ -35,35 +35,65 @@ const config: Config = {
           DEFAULT: 'var(--color-background)',
           surface: 'var(--color-background-surface)',
           overlay: 'var(--color-background-overlay)',
+          dark: {
+            DEFAULT: 'var(--color-background-dark)',
+            surface: 'var(--color-background-surface-dark)',
+            overlay: 'var(--color-background-overlay-dark)',
+          },
         },
         // Text colors
         text: {
           primary: 'var(--color-text-primary)',
           secondary: 'var(--color-text-secondary)',
           muted: 'var(--color-text-muted)',
+          dark: {
+            primary: 'var(--color-text-primary-dark)',
+            secondary: 'var(--color-text-secondary-dark)',
+            muted: 'var(--color-text-muted-dark)',
+          },
         },
         // UI Elements
         border: {
           DEFAULT: 'var(--color-border)',
           hover: 'var(--color-border-hover)',
+          dark: {
+            DEFAULT: 'var(--color-border-dark)',
+            hover: 'var(--color-border-hover-dark)',
+          },
         },
         axis: {
           stroke: 'var(--color-axis-stroke)',
           tick: 'var(--color-axis-tick)',
           line: 'var(--color-axis-line)',
+          dark: {
+            stroke: 'var(--color-axis-stroke-dark)',
+            tick: 'var(--color-axis-tick-dark)',
+            line: 'var(--color-axis-line-dark)',
+          },
         },
         grid: {
           DEFAULT: 'var(--color-grid)',
+          dark: 'var(--color-grid-dark)',
         },
         sparkle: {
           glow: 'var(--color-sparkle-glow)',
           standard: 'var(--color-sparkle-standard)',
           intense: 'var(--color-sparkle-intense)',
+          dark: {
+            glow: 'var(--color-sparkle-glow-dark)',
+            standard: 'var(--color-sparkle-standard-dark)',
+            intense: 'var(--color-sparkle-intense-dark)',
+          },
         },
         indicator: {
           success: 'var(--color-indicator-success)',
           error: 'var(--color-indicator-error)',
           neutral: 'var(--color-indicator-neutral)',
+          dark: {
+            success: 'var(--color-indicator-success-dark)',
+            error: 'var(--color-indicator-error-dark)',
+            neutral: 'var(--color-indicator-neutral-dark)',
+          },
         },
       },
       animation: {

@@ -5,7 +5,7 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { ThemeToggle } from '@/components/ThemeToggle/ThemeToggle';
 import RouteGuard from '@/components/RouteGuard/RouteGuard';
 import AuthHydration from '@/components/auth/AuthHydration/AuthHydration';
-import AnimatedBackground from '@/components/MainAnimatedBackground/AnimatedBackground';
+import '@/styles/theme.css';
 
 const notoSansJP = Noto_Sans_JP({
   subsets: ['latin'],
@@ -15,11 +15,10 @@ const notoSansJP = Noto_Sans_JP({
 
 export default function RootLayout({ children }: { readonly children: React.ReactNode }) {
   return (
-    <html lang="en" className={notoSansJP.variable}>
+    <html lang="en" data-theme="dark" className={notoSansJP.variable}>
       <body className="h-screen overflow-y-auto bg-black dark:bg-white">
         <div className="min-h-full">
           <ThemeProvider>
-            <AnimatedBackground />
             <AuthHydration />
             <ThemeToggle />
             <RouteGuard>{children}</RouteGuard>
