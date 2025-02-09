@@ -125,11 +125,11 @@ const EclipseToggle: React.FC<EclipseToggleProps> = ({ onThemeChange }) => {
   useEffect(() => {
     // Set initial theme to light mode
     onThemeChange?.('light');
-    
+
     // Pause animations in light mode position
     const moon = document.querySelector('.moon') as HTMLElement;
     const sun = document.querySelector('.four.move') as HTMLElement;
-    
+
     if (moon && sun) {
       // Set initial position for light mode
       moon.style.backgroundPosition = '50% 50%';
