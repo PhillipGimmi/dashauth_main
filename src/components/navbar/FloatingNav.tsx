@@ -7,6 +7,7 @@ import {
   useSpring,
   useVelocity,
   useScroll,
+  MotionValue,
 } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -14,14 +15,14 @@ import { useAuthStore } from '@/store/authStore';
 
 // MenuIcon component stays the same
 const MenuIcon = ({ isOpen }: { isOpen: boolean }) => (
-  <motion.div className="relative w-6 h-6" initial={false}>
+  <motion.div className="relative h-6 w-6" initial={false}>
     <motion.span
       animate={{
         rotate: isOpen ? 45 : 0,
         y: isOpen ? 8 : 0,
       }}
       transition={{ duration: 0.2 }}
-      className="absolute top-0 left-0 w-6 h-0.5 bg-neutral-50 transform origin-center"
+      className="absolute left-0 top-0 h-0.5 w-6 origin-center transform bg-neutral-50"
     />
     <motion.span
       animate={{
@@ -29,7 +30,7 @@ const MenuIcon = ({ isOpen }: { isOpen: boolean }) => (
         x: isOpen ? 8 : 0,
       }}
       transition={{ duration: 0.2 }}
-      className="absolute top-[11px] left-0 w-6 h-0.5 bg-neutral-50"
+      className="absolute left-0 top-[11px] h-0.5 w-6 bg-neutral-50"
     />
     <motion.span
       animate={{
@@ -37,7 +38,7 @@ const MenuIcon = ({ isOpen }: { isOpen: boolean }) => (
         y: isOpen ? -8 : 0,
       }}
       transition={{ duration: 0.2 }}
-      className="absolute bottom-0 left-0 w-6 h-0.5 bg-neutral-50 transform origin-center"
+      className="absolute bottom-0 left-0 h-0.5 w-6 origin-center transform bg-neutral-50"
     />
   </motion.div>
 );
@@ -59,10 +60,8 @@ const NavLink = ({
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         className="h-[20px]"
       >
-        <span className="flex h-[20px] items-center text-neutral-500 text-sm">
-          {children}
-        </span>
-        <span className="flex h-[20px] items-center text-neutral-50 text-sm drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+        <span className="flex h-[20px] items-center text-sm text-neutral-500">{children}</span>
+        <span className="flex h-[20px] items-center text-sm text-neutral-50 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
           {children}
         </span>
       </motion.div>
@@ -71,13 +70,7 @@ const NavLink = ({
 };
 
 // Updated AuthButton component to handle both mobile and desktop styles
-const AuthButton = ({
-  isMobile,
-  onClose,
-}: {
-  isMobile?: boolean;
-  onClose?: () => void;
-}) => {
+const AuthButton = ({ isMobile, onClose }: { isMobile?: boolean; onClose?: () => void }) => {
   const { user, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
 
@@ -124,13 +117,7 @@ const AuthButton = ({
 };
 
 // Updated MobileMenu component
-const MobileMenu = ({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) => {
+const MobileMenu = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -139,13 +126,13 @@ const MobileMenu = ({
         pointerEvents: isOpen ? 'auto' : 'none',
       }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-0 bg-black/95 backdrop-blur-lg z-40"
+      className="fixed inset-0 z-40 bg-black/95 backdrop-blur-lg"
     >
       <motion.div
         initial={{ y: -32, opacity: 0 }}
         animate={{ y: isOpen ? 0 : -32, opacity: isOpen ? 1 : 0 }}
         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-        className="flex flex-col items-center justify-center h-full gap-8"
+        className="flex h-full flex-col items-center justify-center gap-8"
       >
         <NavLink href="/" onClick={onClose}>
           Home
@@ -205,7 +192,7 @@ const useNavState = () => {
   useEffect(() => {
     setMounted(true);
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -213,7 +200,7 @@ const useNavState = () => {
 
   useEffect(() => {
     const updateHasScrolled = () => setHasScrolled(window.scrollY > 50);
-    
+
     window.addEventListener('scroll', updateHasScrolled);
     return () => window.removeEventListener('scroll', updateHasScrolled);
   }, []);
@@ -222,14 +209,17 @@ const useNavState = () => {
 };
 
 // New component for mobile navigation
-const MobileNavigation = ({ isMenuOpen, setIsMenuOpen }: { 
-  isMenuOpen: boolean; 
+const MobileNavigation = ({
+  isMenuOpen,
+  setIsMenuOpen,
+}: {
+  isMenuOpen: boolean;
   setIsMenuOpen: (value: boolean) => void;
 }) => (
   <>
     <div className="h-[52px]" />
-    <header className="fixed top-0 left-0 right-0 z-50">
-      <nav className="w-full bg-black/80 backdrop-blur-lg border-b border-neutral-50/5">
+    <header className="fixed left-0 right-0 top-0 z-50">
+      <nav className="w-full border-b border-neutral-50/5 bg-black/80 backdrop-blur-lg">
         <div className="flex items-center justify-between px-4 py-3">
           <Link href="/" className="flex items-center">
             <motion.div
@@ -265,21 +255,21 @@ const MobileNavigation = ({ isMenuOpen, setIsMenuOpen }: {
 );
 
 // New component for desktop navigation
-const DesktopNavigation = ({ 
-  hasScrolled, 
-  springNavPosition, 
-  isAuthPage 
-}: { 
-  hasScrolled: boolean; 
-  springNavPosition: any; 
+const DesktopNavigation = ({
+  hasScrolled,
+  springNavPosition,
+  isAuthPage,
+}: {
+  hasScrolled: boolean;
+  springNavPosition: MotionValue<number>;
   isAuthPage: boolean;
 }) => (
   <motion.div
-    className="fixed left-0 right-0 z-50 flex justify-center pointer-events-none"
+    className="pointer-events-none fixed left-0 right-0 z-50 flex justify-center"
     style={{ y: hasScrolled ? springNavPosition : 0 }}
   >
     <motion.div
-      className="w-full flex justify-center"
+      className="flex w-full justify-center"
       animate={{
         width: hasScrolled ? '420px' : '100%',
       }}
@@ -291,7 +281,7 @@ const DesktopNavigation = ({
       }}
     >
       <motion.nav
-        className="flex w-full items-center justify-between pointer-events-auto"
+        className="pointer-events-auto flex w-full items-center justify-between"
         initial={false}
         animate={{
           y: hasScrolled ? 24 : 0,
@@ -351,10 +341,10 @@ const FloatingNav = () => {
       {isMobile ? (
         <MobileNavigation isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
       ) : (
-        <DesktopNavigation 
-          hasScrolled={hasScrolled} 
-          springNavPosition={springNavPosition} 
-          isAuthPage={isAuthPage} 
+        <DesktopNavigation
+          hasScrolled={hasScrolled}
+          springNavPosition={springNavPosition}
+          isAuthPage={isAuthPage}
         />
       )}
       <MobileMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />

@@ -74,14 +74,14 @@ export interface FAQItem {
 
 // Create reusable answer templates
 const ANSWER_TEMPLATES = {
-  traditionalOnly: (platform: string) => 
+  traditionalOnly: (platform: string) =>
     `${platform} apps render content on the server. Choose 'Traditional Web App'.`,
-  
+
   traditionalOrSpa: (platform: string, spaCondition: string) =>
     `For standard ${platform}, select 'Traditional Web App'. If you use ${spaCondition}, select 'Single Page Application'.`,
-  
+
   desktopApp: (platform: string, specificFeatures: string) =>
-    `For a native ${platform} desktop app, choose 'Traditional Web App' for centralized API authentication. For ${platform}-specific workflows (${specificFeatures}), integrate these with your backend service.`
+    `For a native ${platform} desktop app, choose 'Traditional Web App' for centralized API authentication. For ${platform}-specific workflows (${specificFeatures}), integrate these with your backend service.`,
 };
 
 // Group similar FAQs
@@ -356,45 +356,34 @@ interface ProviderGroups {
 
 const PROVIDERS: ProviderGroups = {
   global: {
-    dns: [
-      'Akamai Edge DNS',
-      'Amazon Route 53',
-      'Azure DNS',
-      'Cloudflare',
-      'Google Cloud DNS',
-    ],
-    registrars: [
-      'Domain.com',
-      'GoDaddy',
-      'Namecheap',
-    ],
-    hosting: [
-      'A2 Hosting',
-      'Bluehost',
-      'HostGator',
-    ]
+    dns: ['Akamai Edge DNS', 'Amazon Route 53', 'Azure DNS', 'Cloudflare', 'Google Cloud DNS'],
+    registrars: ['Domain.com', 'GoDaddy', 'Namecheap'],
+    hosting: ['A2 Hosting', 'Bluehost', 'HostGator'],
   },
   asia: {
-    dns: [
-      'Alibaba Cloud DNS',
-      'Tencent Cloud DNS',
-    ],
-    registrars: [
-      'BigRock',
-      'GMO',
-      'Onamae.com',
-    ]
+    dns: ['Alibaba Cloud DNS', 'Tencent Cloud DNS'],
+    registrars: ['BigRock', 'GMO', 'Onamae.com'],
   },
 } as const;
 
-// Helper function to get step status
-const getStepStatusHelper = (
+// Define interface for verification response
+interface VerificationResponse {
+  success?: boolean;
+  records?: Array<{
+    name: string;
+    type: string;
+    value?: string;
+  }>;
+}
+
+// Export the helper function since it's likely meant to be used elsewhere
+export const getStepStatusHelper = (
   step: string,
   currentStep: string,
-  verificationResponse?: any,
+  verificationResponse?: VerificationResponse,
   error?: string,
   isVerified?: boolean
-) => {
+): 'error' | 'complete' | 'current' | 'pending' => {
   const stepStates = {
     fetching: {
       completed: verificationResponse?.success ?? false,
@@ -402,15 +391,19 @@ const getStepStatusHelper = (
     },
     checking_txt: {
       completed: (verificationResponse?.records?.length ?? 0) > 0,
-      failed: verificationResponse && (!verificationResponse.records || verificationResponse.records.length === 0),
+      failed:
+        verificationResponse &&
+        (!verificationResponse.records || verificationResponse.records.length === 0),
     },
     verifying_match: {
-      completed: verificationResponse?.records?.some(
-        (record: any) => record.name.includes('_dashauth') && record.type === 'TXT'
-      ) ?? false,
-      failed: verificationResponse?.records?.every(
-        (record: any) => !record.name.includes('_dashauth') || record.type !== 'TXT'
-      ) ?? false,
+      completed:
+        verificationResponse?.records?.some(
+          (record) => record.name.includes('_dashauth') && record.type === 'TXT'
+        ) ?? false,
+      failed:
+        verificationResponse?.records?.every(
+          (record) => !record.name.includes('_dashauth') || record.type !== 'TXT'
+        ) ?? false,
     },
     complete: {
       completed: isVerified,
@@ -440,41 +433,39 @@ interface ProviderBase {
 }
 
 // Create provider templates to reduce duplication
-const createProviderTemplate = (region: string, category: string) => 
+const createProviderTemplate =
+  (region: string, category: string) =>
   (name: string, additionalProps: Partial<ProviderBase> = {}): BaseDNSProvider => ({
     name,
     category,
     region,
     instructions: INSTRUCTION_TEMPLATES[category === CATEGORIES.DNS ? 'dns' : 'domain'](name),
-    ...additionalProps
+    ...additionalProps,
   });
 
 // Update createProviders function with proper type safety
 const createProviders = () => {
   const providers: BaseDNSProvider[] = [];
-  
+
   // Process global providers
   Object.entries(PROVIDERS.global).forEach(([category, names]) => {
     const categoryKey = category.toUpperCase() as CategoryKey;
     const template = createProviderTemplate(REGIONS.GLOBAL, CATEGORIES[categoryKey]);
     names.forEach((name: string) => providers.push(template(name)));
   });
-  
+
   // Process regional providers
   Object.entries(PROVIDERS).forEach(([region, categories]) => {
     if (region !== 'global') {
       Object.entries(categories as Record<string, string[]>).forEach(([category, names]) => {
         const regionKey = region.toUpperCase() as RegionKey;
         const categoryKey = category.toUpperCase() as CategoryKey;
-        const template = createProviderTemplate(
-          REGIONS[regionKey],
-          CATEGORIES[categoryKey]
-        );
+        const template = createProviderTemplate(REGIONS[regionKey], CATEGORIES[categoryKey]);
         names.forEach((name) => providers.push(template(name)));
       });
     }
   });
-  
+
   return providers;
 };
 
@@ -516,8 +507,8 @@ export const faqData = {
   domainVerification: [
     {
       id: 'faq-36',
-      question: "How do I verify my domain?",
-      answer: "Follow these steps to verify your domain..."
-    }
-  ]
+      question: 'How do I verify my domain?',
+      answer: 'Follow these steps to verify your domain...',
+    },
+  ],
 };

@@ -52,12 +52,7 @@ export const frameworks: Framework[] = [
       'Incident Response Plans',
     ],
     'SOC 2 compliance is crucial for B2B SaaS companies. Our integrated solution provides continuous monitoring, automated evidence collection, and real-time compliance dashboards, saving your team countless hours of manual work.',
-    [
-      'Annual Audit',
-      'Continuous Monitoring',
-      'Security Controls',
-      'Employee Training',
-    ]
+    ['Annual Audit', 'Continuous Monitoring', 'Security Controls', 'Employee Training']
   ),
   createFramework(
     'gdpr',
@@ -92,11 +87,6 @@ export const frameworks: Framework[] = [
       'Breach Notification Protocol',
     ],
     'Healthcare companies must maintain HIPAA compliance or face severe penalties. Our solution provides comprehensive HIPAA compliance features, including BAA management and PHI handling protocols.',
-    [
-      'Privacy Rule',
-      'Security Rule',
-      'Breach Notification',
-      'Regular Risk Assessments',
-    ]
+    ['Privacy Rule', 'Security Rule', 'Breach Notification', 'Regular Risk Assessments']
   ),
-]; 
+];

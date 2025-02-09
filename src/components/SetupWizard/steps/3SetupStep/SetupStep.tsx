@@ -16,12 +16,13 @@ import {
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 
 import { StepHeader } from '../../StepHeader/StepHeader';
-import { SetupOption } from '@/types/types';
+
 import { cn } from '@/lib/utils';
+import { PlatformId } from '@/types/types'; // Adjust the import path as needed
 
 interface SetupStepProps {
   readonly domain: string;
-  readonly selectedPlatform: SetupOption['id'];
+  readonly selectedPlatform: PlatformId;
   readonly onCompleteAction: () => Promise<void>;
   readonly onBackAction: () => Promise<void>;
   readonly isSubmitting: boolean;
@@ -340,17 +341,12 @@ const getButtonText = (isSubmitting: boolean, error: string | null): string => {
   return 'Check Integration';
 };
 
-// Extract ProviderSteps component
-const ProviderSteps: React.FC<{ steps: string[] }> = ({ steps }) => (
-  <ol className="list-inside list-decimal space-y-2">
-    {steps.map((step) => (
-      <li key={step}>{step}</li> // Using step content as key instead of index
-    ))}
-  </ol>
-);
-
 // Split verification logic into a custom hook to reduce complexity
-const useVerification = (domain: string, clientConfig: ClientConfig | null, onCompleteAction: () => Promise<void>) => {
+const useVerification = (
+  domain: string,
+  clientConfig: ClientConfig | null,
+  onCompleteAction: () => Promise<void>
+) => {
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -377,7 +373,7 @@ const useVerification = (domain: string, clientConfig: ClientConfig | null, onCo
       }
 
       const scriptData = await scriptResponse.json();
-      
+
       // Check if DashAuth is initialized on the client
       const dashAuthStatus: DashAuthStatus = {
         scriptLoaded: false,
@@ -475,9 +471,7 @@ const PublicVerificationPanel: React.FC<{
     transition={{ delay: 0.2 }}
     className="rounded-lg bg-zinc-900 p-6 dark:bg-white"
   >
-    <h3 className="mb-6 text-lg font-medium text-white dark:text-zinc-700">
-      Public Verification
-    </h3>
+    <h3 className="mb-6 text-lg font-medium text-white dark:text-zinc-700">Public Verification</h3>
     <div className="space-y-4">
       <VerificationItem
         title={
@@ -485,27 +479,18 @@ const PublicVerificationPanel: React.FC<{
             <TooltipPrimitive.Trigger className="w-full text-left">
               <span>HTTPS Status</span>
             </TooltipPrimitive.Trigger>
-            <AnimatedTooltipContent
-              side="right"
-              align="start"
-              className="w-[400px]"
-            >
+            <AnimatedTooltipContent side="right" align="start" className="w-[400px]">
               <div className="space-y-3">
                 <div>
                   <p className="mb-2 font-medium">What we check:</p>
                   <ul className="space-y-1.5 text-sm">
                     <li className="flex items-start gap-2">
                       <span>•</span>
-                      <span>
-                        HTTPS Availability: We verify your site loads securely
-                        over HTTPS
-                      </span>
+                      <span>HTTPS Availability: We verify your site loads securely over HTTPS</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span>•</span>
-                      <span>
-                        HTTP Redirect: We ensure HTTP traffic redirects to HTTPS
-                      </span>
+                      <span>HTTP Redirect: We ensure HTTP traffic redirects to HTTPS</span>
                     </li>
                   </ul>
                 </div>
@@ -529,16 +514,13 @@ const PublicVerificationPanel: React.FC<{
                     ) : (
                       <XCircle className="h-4 w-4 text-red-500" />
                     )}
-                    <span className="text-white dark:text-black">
-                      HTTPS Access
-                    </span>
+                    <span className="text-white dark:text-black">HTTPS Access</span>
                   </li>
                 </TooltipPrimitive.Trigger>
                 <AnimatedTooltipContent>
                   <p className="mb-1 font-medium">HTTPS Accessibility</p>
                   <p className="text-sm">
-                    We verify your site can be accessed over HTTPS at{' '}
-                    {`https://${domain}`}
+                    We verify your site can be accessed over HTTPS at {`https://${domain}`}
                   </p>
                 </AnimatedTooltipContent>
               </TooltipPrimitive.Root>
@@ -551,16 +533,13 @@ const PublicVerificationPanel: React.FC<{
                     ) : (
                       <XCircle className="h-4 w-4 text-red-500" />
                     )}
-                    <span className="text-white dark:text-black">
-                      HTTP to HTTPS Redirect
-                    </span>
+                    <span className="text-white dark:text-black">HTTP to HTTPS Redirect</span>
                   </li>
                 </TooltipPrimitive.Trigger>
                 <AnimatedTooltipContent>
                   <p className="mb-1 font-medium">Redirect Check</p>
                   <p className="text-sm">
-                    We verify that HTTP requests automatically redirect to HTTPS
-                    for security
+                    We verify that HTTP requests automatically redirect to HTTPS for security
                   </p>
                 </AnimatedTooltipContent>
               </TooltipPrimitive.Root>
@@ -649,9 +628,7 @@ const PublicVerificationPanel: React.FC<{
                   </TooltipPrimitive.Trigger>
                   <AnimatedTooltipContent>
                     <p className="mb-1 font-medium">Defer Attribute Check</p>
-                    <p className="text-sm">
-                      Script tag must include the defer attribute
-                    </p>
+                    <p className="text-sm">Script tag must include the defer attribute</p>
                   </AnimatedTooltipContent>
                 </TooltipPrimitive.Root>
 
@@ -669,8 +646,7 @@ const PublicVerificationPanel: React.FC<{
                   <AnimatedTooltipContent>
                     <p className="mb-1 font-medium">Script Location Check</p>
                     <p className="text-sm">
-                      Script must be placed in the &lt;head&gt; section of your
-                      HTML
+                      Script must be placed in the &lt;head&gt; section of your HTML
                     </p>
                   </AnimatedTooltipContent>
                 </TooltipPrimitive.Root>
@@ -699,17 +675,14 @@ const PublicVerificationPanel: React.FC<{
 const PrivateVerificationPanel: React.FC<{
   verificationStatus: VerificationStatus;
   domain: string;
-  clientConfig: ClientConfig | null;
-}> = ({ verificationStatus, domain, clientConfig }) => (
+}> = ({ verificationStatus, domain }) => (
   <motion.div
     initial={{ opacity: 0, x: 20 }}
     animate={{ opacity: 1, x: 0 }}
     transition={{ delay: 0.3 }}
     className="rounded-lg bg-zinc-900 p-6 dark:bg-white"
   >
-    <h3 className="mb-6 text-lg font-medium text-white dark:text-zinc-700">
-      Private Verification
-    </h3>
+    <h3 className="mb-6 text-lg font-medium text-white dark:text-zinc-700">Private Verification</h3>
     <div className="space-y-4">
       <VerificationItem
         title={
@@ -719,9 +692,7 @@ const PrivateVerificationPanel: React.FC<{
             </TooltipPrimitive.Trigger>
             <AnimatedTooltipContent>
               <p className="mb-1 font-medium">Runtime Verification</p>
-              <p className="mb-2 text-sm">
-                Monitors script execution and security:
-              </p>
+              <p className="mb-2 text-sm">Monitors script execution and security:</p>
               <ul className="list-inside list-disc space-y-1 text-sm">
                 <li>Validates script loading</li>
                 <li>Verifies security context</li>
@@ -790,26 +761,17 @@ const PrivateVerificationPanel: React.FC<{
                     <ul className="list-inside list-disc space-y-1 text-sm">
                       <li>
                         Protocol:{' '}
-                        {verificationStatus?.scriptDetails?.securityContext
-                          ? 'HTTPS'
-                          : 'HTTP'}
+                        {verificationStatus?.scriptDetails?.securityContext ? 'HTTPS' : 'HTTP'}
                       </li>
                       <li>
                         HTTP to HTTPS Redirect:{' '}
-                        {verificationStatus?.scriptDetails?.hasHttpsRedirect
-                          ? 'Yes'
-                          : 'No'}
+                        {verificationStatus?.scriptDetails?.hasHttpsRedirect ? 'Yes' : 'No'}
                       </li>
-                      <li>
-                        URL:{' '}
-                        {domain.startsWith('http') ? domain : `https://${domain}`}
-                      </li>
+                      <li>URL: {domain.startsWith('http') ? domain : `https://${domain}`}</li>
                     </ul>
                     {verificationStatus?.scriptDetails?.hasHttpsRedirect && (
                       <div className="mt-3 rounded bg-emerald-500/10 p-2 text-sm">
-                        <p className="text-emerald-400">
-                          ✓ Site properly enforces HTTPS
-                        </p>
+                        <p className="text-emerald-400">✓ Site properly enforces HTTPS</p>
                       </div>
                     )}
                   </AnimatedTooltipContent>
@@ -899,9 +861,7 @@ const PrivateVerificationPanel: React.FC<{
         }
         status={{
           success: verificationStatus?.clientInitialized ?? false,
-          text: verificationStatus?.clientInitialized
-            ? 'Initialized'
-            : 'Not Initialized',
+          text: verificationStatus?.clientInitialized ? 'Initialized' : 'Not Initialized',
         }}
         details={
           <div className="space-y-4">
@@ -1005,9 +965,9 @@ const WaitingForVerification: React.FC = () => (
           Ready to Verify Your Integration?
         </h3>
         <p className="text-lg text-zinc-400 dark:text-zinc-600">
-          Add the script to your website and click &quot;Check Integration&quot; to
-          verify the installation. We&apos;ll run a comprehensive check of both
-          public and private verification metrics.
+          Add the script to your website and click &quot;Check Integration&quot; to verify the
+          installation. We&apos;ll run a comprehensive check of both public and private verification
+          metrics.
         </p>
       </motion.div>
       <motion.div
@@ -1040,9 +1000,7 @@ const HelpSidebar: React.FC<{
       >
         <div className="space-y-6 p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white dark:text-gray-900">
-              Integration Guide
-            </h2>
+            <h2 className="text-xl font-bold text-white dark:text-gray-900">Integration Guide</h2>
             <button
               onClick={() => setShowHelp(false)}
               className="p-2 text-zinc-400 transition-colors hover:text-white dark:hover:text-black"
@@ -1090,7 +1048,15 @@ export const SetupStep: React.FC<SetupStepProps> = ({
   onBackAction,
   isSubmitting,
 }) => {
-  const [clientConfig] = useState<ClientConfig | null>(null);
+  const [clientConfig] = useState<ClientConfig | null>(() => ({
+    scriptCode: getScriptCodeForPlatform(selectedPlatform),
+    envSetup: '',
+    clientId: '',
+    platformType: selectedPlatform,
+    instructions:
+      SCRIPT_PROVIDERS.find((p) => p.name.toLowerCase() === selectedPlatform.toLowerCase())
+        ?.steps || [],
+  }));
   const [showHelp, setShowHelp] = useState(false);
   const [copiedStates, setCopiedStates] = useState({
     scriptCode: false,
@@ -1098,12 +1064,11 @@ export const SetupStep: React.FC<SetupStepProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  const {
-    verificationStatus,
-    error,
-    isLoading,
-    handleVerifyScript,
-  } = useVerification(domain, clientConfig, onCompleteAction);
+  const { verificationStatus, error, isLoading, handleVerifyScript } = useVerification(
+    domain,
+    clientConfig,
+    onCompleteAction
+  );
 
   const handleCopy = async (text: string, field: 'scriptCode') => {
     try {
@@ -1252,15 +1217,14 @@ export const SetupStep: React.FC<SetupStepProps> = ({
               <AnimatePresence mode="wait">
                 {verificationStatus && !isLoading ? (
                   <motion.div className="relative grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    <PublicVerificationPanel 
-                      verificationStatus={verificationStatus} 
-                      domain={domain}
-                      clientConfig={clientConfig}
-                    />
-                    <PrivateVerificationPanel 
+                    <PublicVerificationPanel
                       verificationStatus={verificationStatus}
                       domain={domain}
                       clientConfig={clientConfig}
+                    />
+                    <PrivateVerificationPanel
+                      verificationStatus={verificationStatus}
+                      domain={domain}
                     />
                   </motion.div>
                 ) : (
@@ -1281,3 +1245,7 @@ export const SetupStep: React.FC<SetupStepProps> = ({
     </TooltipPrimitive.Provider>
   );
 };
+
+function getScriptCodeForPlatform(_platform: PlatformId): string {
+  return `<script src="${getScriptSrc()}" defer id="your-client-id"></script>`;
+}

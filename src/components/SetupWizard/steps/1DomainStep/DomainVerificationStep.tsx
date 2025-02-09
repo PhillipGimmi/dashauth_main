@@ -25,6 +25,33 @@ interface DnsRecord {
   data: string;
 }
 
+interface VerificationMetadata {
+  initial_request?: {
+    timestamp: string;
+    ip_address: string;
+    user_agent: string;
+  };
+  verification_instructions?: {
+    record_name: string;
+    record_type: string;
+    record_value: string;
+  };
+}
+
+interface VerificationData {
+  verification_token: string;
+  status: 'pending' | 'verified' | 'failed';
+  verification_method: 'dns';
+  id?: string;
+  user_id?: string;
+  domain?: string;
+  verified?: boolean;
+  verification_attempts?: number;
+  last_verification_attempt?: string;
+  verification_error?: string;
+  metadata?: VerificationMetadata;
+}
+
 interface DnsVerifyResponse {
   success: boolean;
   records: DnsRecord[];
@@ -289,9 +316,7 @@ const VerificationSteps: React.FC<{
                     {status === 'pending' && (
                       <div className="h-5 w-5 rounded-full border-2 border-zinc-300" />
                     )}
-                    <span className={getStatusClassName(status)}>
-                      {label}
-                    </span>
+                    <span className={getStatusClassName(status)}>{label}</span>
                   </motion.div>
                 </TooltipTrigger>
                 <AnimatedTooltipContent>
@@ -355,8 +380,8 @@ const VerificationSteps: React.FC<{
                 )}
               </div>
               {details.attempts?.map((attempt) => (
-                <div 
-                  key={`attempt-${attempt.type}-${attempt.domain}`} 
+                <div
+                  key={`attempt-${attempt.type}-${attempt.domain}`}
                   className="ml-2 text-zinc-100 dark:text-zinc-900"
                 >
                   <div>
@@ -367,10 +392,7 @@ const VerificationSteps: React.FC<{
                   ) : (
                     <div className="ml-4">
                       {attempt.errors?.map((err) => (
-                        <div 
-                          key={`error-${err.provider}-${err.error}`} 
-                          className="text-red-500"
-                        >
+                        <div key={`error-${err.provider}-${err.error}`} className="text-red-500">
                           {err.provider}: {err.error}
                         </div>
                       ))}
@@ -454,7 +476,7 @@ const ScaleMotion: React.FC<{
 );
 
 // First, let's create a reusable copy button component to remove duplication
-const CopyButton: React.FC<{ 
+const CopyButton: React.FC<{
   onCopy: () => void;
   isCopied: boolean;
 }> = ({ onCopy, isCopied }) => (
@@ -475,10 +497,7 @@ const CopyButton: React.FC<{
 );
 
 // Helper function to get verification status text
-const getVerificationStatusText = (
-  step: VerificationStep, 
-  isVerified: boolean
-): string => {
+const getVerificationStatusText = (step: VerificationStep, isVerified: boolean): string => {
   if (step === 'complete') {
     return isVerified ? 'Domain Verified!' : 'Verification Failed';
   }
@@ -525,7 +544,7 @@ const createProviderId = (category: string, name: string): string => {
 
 const VerificationButton: React.FC<{
   verificationStep: VerificationStep;
-  verificationData: any;
+  verificationData: VerificationData;
   onVerify: () => void;
   onContinue: () => void;
 }> = ({ verificationStep, verificationData, onVerify, onContinue }) => {
@@ -561,9 +580,7 @@ const VerificationButton: React.FC<{
       active:scale-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-300 dark:text-gray-700
       dark:before:bg-black dark:hover:border-black dark:hover:text-white"
     >
-      <span className="relative z-10">
-        {isVerifying ? 'Verifying...' : 'Verify Now'}
-      </span>
+      <span className="relative z-10">{isVerifying ? 'Verifying...' : 'Verify Now'}</span>
     </button>
   );
 };
@@ -633,11 +650,11 @@ export const DomainVerificationStep: React.FC<DomainVerificationStepProps> = ({
     try {
       const response = await fetch(`/api/domains/verify?domain=${domain}`);
       const data: DnsVerifyResponse = await response.json();
-      
+
       if (!data.success && shouldRetry(data, retryCount)) {
         return await handleRetry(attempt, retryCount);
       }
-      
+
       return data;
     } catch (error) {
       if (attempt < MAX_RETRIES) {
@@ -664,7 +681,7 @@ export const DomainVerificationStep: React.FC<DomainVerificationStepProps> = ({
       return;
     }
 
-    if (!await validateTxtRecords(data)) {
+    if (!(await validateTxtRecords(data))) {
       return;
     }
 
@@ -677,7 +694,7 @@ export const DomainVerificationStep: React.FC<DomainVerificationStepProps> = ({
       handleMissingTxtRecords();
       return false;
     }
-    
+
     setVerificationStep('verifying_match');
     const dashAuthRecord = data.records.find(
       (record) => record.name.includes('_dashauth') && record.type === 'TXT'
@@ -819,7 +836,10 @@ export const DomainVerificationStep: React.FC<DomainVerificationStepProps> = ({
     onSkip();
   };
 
-  const getCardStatus = (step: VerificationStep, isVerified: boolean): 'success' | 'error' | undefined => {
+  const getCardStatus = (
+    step: VerificationStep,
+    isVerified: boolean
+  ): 'success' | 'error' | undefined => {
     if (step !== 'complete') return undefined;
     return isVerified ? 'success' : 'error';
   };
@@ -926,9 +946,7 @@ export const DomainVerificationStep: React.FC<DomainVerificationStepProps> = ({
                       animate={{ opacity: 1 }}
                       className="h-full"
                     >
-                      <GlowingCard
-                        status={getCardStatus(verificationStep, isVerified)}
-                      >
+                      <GlowingCard status={getCardStatus(verificationStep, isVerified)}>
                         <div className="flex flex-col space-y-6">
                           <div className="flex items-center gap-3">
                             <VerificationIcon step={verificationStep} isVerified={isVerified} />
@@ -939,7 +957,12 @@ export const DomainVerificationStep: React.FC<DomainVerificationStepProps> = ({
 
                           <div className="space-y-4">
                             <p className="text-sm text-zinc-400 dark:text-zinc-600">
-                              {getVerificationMessage(verificationStep, isVerified, domain, verificationError)}
+                              {getVerificationMessage(
+                                verificationStep,
+                                isVerified,
+                                domain,
+                                verificationError
+                              )}
                             </p>
 
                             <VerificationSteps
@@ -1066,7 +1089,10 @@ const HelpSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
                     {Object.entries(providersByCategory).map(([category, providers]) => (
                       <div key={`category-${category.toLowerCase()}`} className="space-y-2">
                         {providers.map((provider) => (
-                          <details key={createProviderId(category, provider.name)} className="group">
+                          <details
+                            key={createProviderId(category, provider.name)}
+                            className="group"
+                          >
                             <summary className="flex cursor-pointer list-none items-center justify-between rounded-md p-2 hover:bg-zinc-800/30 dark:hover:bg-zinc-200/30">
                               <span className="text-zinc-300 dark:text-zinc-700">
                                 {provider.name}
@@ -1160,11 +1186,11 @@ const VerificationIcon: React.FC<{
   if (step === 'complete' && isVerified) {
     return <CheckCircleIcon className="h-8 w-8 text-green-500" />;
   }
-  
+
   if (step === 'error' || (step === 'complete' && !isVerified)) {
     return <XCircleIcon className="h-8 w-8 text-red-500" />;
   }
-  
+
   return (
     <motion.div
       animate={{ rotate: 360 }}

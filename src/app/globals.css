@@ -44,7 +44,7 @@
 }
 
 .input-gradient {
-  @apply dark:bg-gradient-to-r dark:from-transparent dark:to-white bg-gradient-to-r from-transparent to-[#18181bcc];
+  @apply bg-gradient-to-r from-transparent to-[#18181bcc] dark:bg-gradient-to-r dark:from-transparent dark:to-white;
 }
 body {
   color: var(--foreground);
@@ -215,12 +215,7 @@ body {
 }
 
 .shimmer-button:not([disabled])[data-effect='wipe'] .shimmer {
-  mask-image: linear-gradient(
-    90deg,
-    transparent 20%,
-    black 88%,
-    transparent 90%
-  );
+  mask-image: linear-gradient(90deg, transparent 20%, black 88%, transparent 90%);
   mask-size: 200% 200%;
   animation: wipe 1.5s linear infinite both -0.5s;
 }

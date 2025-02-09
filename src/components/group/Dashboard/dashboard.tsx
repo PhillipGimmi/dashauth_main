@@ -159,7 +159,8 @@ const generateDummyTimeData = (timeRange: TimeRangeType): TimeData[] => {
     logins: Math.round(baseLogins * multiplier),
     signups: Math.round(baseSignups * multiplier),
     responseTime: Math.round(
-      baseResponse * (responseVariation.min + Math.random() * (responseVariation.max - responseVariation.min))
+      baseResponse *
+        (responseVariation.min + Math.random() * (responseVariation.max - responseVariation.min))
     ),
   });
 
@@ -198,6 +199,47 @@ const generateDummyTimeData = (timeRange: TimeRangeType): TimeData[] => {
         return generateDataPoint(dayStr, 2.5 * (0.6 + Math.random() * 0.8));
       });
   }
+};
+
+const generateMockRecentActivity = (): RecentActivity[] => {
+  const activityData = [
+    {
+      id: 'act1',
+      type: 'Login' as ActivityType,
+      user: 'john.doe@example.com',
+      location: 'San Francisco, US',
+      status: 'success' as ActivityStatus,
+    },
+    {
+      id: 'act2',
+      type: '2FA Verification' as ActivityType,
+      user: 'jane.smith@example.com',
+      location: 'London, UK',
+      status: 'warning' as ActivityStatus,
+    },
+    {
+      id: 'act3',
+      type: 'Logout' as ActivityType,
+      user: 'bob.wilson@example.com',
+      location: 'Sydney, AU',
+      status: 'success' as ActivityStatus,
+    },
+    {
+      id: 'act4',
+      type: 'Password Change' as ActivityType,
+      user: 'alice.johnson@example.com',
+      location: 'Toronto, CA',
+      status: 'error' as ActivityStatus,
+    },
+  ];
+
+  const baseTimestamp = new Date('2024-03-06T10:30:00Z');
+
+  return activityData.map((activity, index) => ({
+    ...activity,
+    timestamp: new Date(baseTimestamp.getTime() - index * 3 * 60000).toISOString(), // Subtract 3 minutes per item
+    icon: ACTIVITY_ICONS[activity.type],
+  }));
 };
 
 const MOCK_DATA: ChartData = {
@@ -283,44 +325,7 @@ const MOCK_DATA: ChartData = {
     { time: '16:00', active: 2900, average: 26 },
     { time: '20:00', active: 1800, average: 30 },
   ],
-  recentActivity: [
-    {
-      id: 'act1',
-      type: 'Login',
-      user: 'john.doe@example.com',
-      timestamp: '2024-03-06T10:30:00Z',
-      location: 'San Francisco, US',
-      status: 'success',
-      icon: ACTIVITY_ICONS['Login']
-    },
-    {
-      id: 'act2',
-      type: '2FA Verification',
-      user: 'jane.smith@example.com',
-      timestamp: '2024-03-06T10:28:00Z',
-      location: 'London, UK',
-      status: 'warning',
-      icon: ACTIVITY_ICONS['2FA Verification']
-    },
-    {
-      id: 'act3',
-      type: 'Logout',
-      user: 'bob.wilson@example.com',
-      timestamp: '2024-03-06T10:25:00Z',
-      location: 'Sydney, AU',
-      status: 'success',
-      icon: ACTIVITY_ICONS['Logout']
-    },
-    {
-      id: 'act4',
-      type: 'Password Change',
-      user: 'alice.johnson@example.com',
-      timestamp: '2024-03-06T10:20:00Z',
-      location: 'Toronto, CA',
-      status: 'error',
-      icon: ACTIVITY_ICONS['Password Change']
-    }
-  ],
+  recentActivity: generateMockRecentActivity(),
 };
 
 const Dashboard = ({ isConfigured = true }: DashboardProps) => {
@@ -362,7 +367,7 @@ const Dashboard = ({ isConfigured = true }: DashboardProps) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-900 to-zinc-950">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-zinc-900 to-zinc-950">
         busy loading ...
       </div>
     );
@@ -381,17 +386,17 @@ const Dashboard = ({ isConfigured = true }: DashboardProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 to-zinc-950">
-      <div className="h-full flex flex-col">
+      <div className="flex h-full flex-col">
         <div className="flex-none p-4 sm:p-6">
           <DashboardHeader user={headerUser} />
-          <div className="flex justify-end gap-2 mt-4 sm:mt-6">
+          <div className="mt-4 flex justify-end gap-2 sm:mt-6">
             {TIME_RANGES.map((range) => (
               <button
                 key={range}
                 onClick={() => handleTimeRangeChange(range)}
-                className={`px-2 sm:px-3 py-1 rounded-md text-sm transition-colors ${
+                className={`rounded-md px-2 py-1 text-sm transition-colors sm:px-3 ${
                   timeRange === range
-                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                    ? 'border border-blue-500/30 bg-blue-500/20 text-blue-400'
                     : 'text-zinc-400 hover:text-zinc-300'
                 }`}
               >
@@ -401,9 +406,9 @@ const Dashboard = ({ isConfigured = true }: DashboardProps) => {
           </div>
         </div>
 
-        <div className="flex-1 p-4 sm:p-6 flex flex-col lg:flex-row gap-6 overflow-auto">
+        <div className="flex flex-1 flex-col gap-6 overflow-auto p-4 sm:p-6 lg:flex-row">
           {/* First Column */}
-          <div className="w-full lg:w-1/3 min-w-[300px] space-y-6">
+          <div className="w-full min-w-[300px] space-y-6 lg:w-1/3">
             <ChartCard
               title="Authentication Activity"
               subtitle="Real-time user authentication tracking"
@@ -412,12 +417,14 @@ const Dashboard = ({ isConfigured = true }: DashboardProps) => {
             <ChartCard
               title="Geographic Distribution"
               subtitle="User distribution and MFA adoption by country"
-              chart={<GeographicDistribution data={MOCK_DATA.locationData} primaryColor="#10B981" />}
+              chart={
+                <GeographicDistribution data={MOCK_DATA.locationData} primaryColor="#10B981" />
+              }
             />
           </div>
 
           {/* Second Column */}
-          <div className="w-full lg:w-1/3 min-w-[300px] space-y-6">
+          <div className="w-full min-w-[300px] space-y-6 lg:w-1/3">
             <ChartCard
               title="Authentication Methods"
               subtitle="Distribution and trends of authentication methods"
@@ -426,14 +433,12 @@ const Dashboard = ({ isConfigured = true }: DashboardProps) => {
             <ChartCard
               title="Security Incidents"
               subtitle="Daily security events and blocked attempts"
-              chart={
-                <SecurityIncidentsChart data={MOCK_DATA.securityIncidents} />
-              }
+              chart={<SecurityIncidentsChart data={MOCK_DATA.securityIncidents} />}
             />
           </div>
 
           {/* Third Column */}
-          <div className="w-full lg:w-1/3 min-w-[300px] space-y-6">
+          <div className="w-full min-w-[300px] space-y-6 lg:w-1/3">
             <ChartCard
               title="Session Analytics"
               subtitle="Active sessions and average duration"
@@ -442,9 +447,7 @@ const Dashboard = ({ isConfigured = true }: DashboardProps) => {
             <ChartCard
               title="Recent Activity"
               subtitle="Latest authentication events"
-              content={
-                <RecentActivityList activities={processedRecentActivity} />
-              }
+              content={<RecentActivityList activities={processedRecentActivity} />}
             />
           </div>
         </div>

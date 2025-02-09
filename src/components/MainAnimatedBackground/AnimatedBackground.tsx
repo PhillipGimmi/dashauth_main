@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-
+import { useTheme } from '@/context/ThemeContext';
 
 interface RendererProps {
   canvas: HTMLCanvasElement;
@@ -11,6 +11,7 @@ interface RendererProps {
   buffer: WebGLBuffer | null;
   vs: WebGLShader | null;
   fs: WebGLShader | null;
+  isDarkMode: boolean;
   updateScale: (scale: number) => void;
   render: (now: number) => void;
 }
@@ -23,15 +24,16 @@ class Renderer implements RendererProps {
   buffer: WebGLBuffer | null = null;
   vs: WebGLShader | null = null;
   fs: WebGLShader | null = null;
-  // Cache uniform locations
+  isDarkMode: boolean;
   private cachedResolutionLocation: WebGLUniformLocation | null = null;
   private cachedTimeLocation: WebGLUniformLocation | null = null;
+  private cachedThemeLocation: WebGLUniformLocation | null = null;
   private cachedPositionLocation: number = -1;
-  private cachedIsDarkModeLocation: WebGLUniformLocation | null = null;
 
-  constructor(canvas: HTMLCanvasElement, scale: number) {
+  constructor(canvas: HTMLCanvasElement, scale: number, isDarkMode: boolean) {
     this.canvas = canvas;
     this.scale = scale;
+    this.isDarkMode = isDarkMode;
 
     const gl = canvas.getContext('webgl2', {
       alpha: true,
@@ -74,11 +76,10 @@ class Renderer implements RendererProps {
       throw new Error('Failed to link program');
     }
 
-    // Cache uniform locations after program is linked
     this.cachedResolutionLocation = this.gl.getUniformLocation(this.program, 'resolution');
     this.cachedTimeLocation = this.gl.getUniformLocation(this.program, 'time');
+    this.cachedThemeLocation = this.gl.getUniformLocation(this.program, 'isDarkMode');
     this.cachedPositionLocation = this.gl.getAttribLocation(this.program, 'position');
-    this.cachedIsDarkModeLocation = this.gl.getUniformLocation(this.program, 'isDarkMode');
   }
 
   private compileShader(shader: WebGLShader, source: string): void {
@@ -109,17 +110,23 @@ class Renderer implements RendererProps {
     this.gl.viewport(0, 0, this.canvas.width * this.scale, this.canvas.height * this.scale);
   }
 
+  updateTheme(isDarkMode: boolean): void {
+    this.isDarkMode = isDarkMode;
+    if (this.program) {
+      this.gl.useProgram(this.program);
+      this.gl.uniform1i(this.cachedThemeLocation, this.isDarkMode ? 1 : 0);
+    }
+  }
+
   render(now: number): void {
     if (!this.program) return;
 
-    const isDarkMode = document.documentElement.classList.contains('dark');
-    
-    if (isDarkMode) {
-      this.gl.clearColor(0, 0, 0, 0);
-    } else {
-      this.gl.clearColor(0.1, 0.1, 0.2, 1); // Original dark background
-    }
-
+    this.gl.clearColor(
+      this.isDarkMode ? 0.1 : 0.95,
+      this.isDarkMode ? 0.1 : 0.95,
+      this.isDarkMode ? 0.2 : 0.98,
+      1
+    );
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     this.gl.useProgram(this.program);
 
@@ -127,25 +134,17 @@ class Renderer implements RendererProps {
       this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
     }
 
-    this.gl.uniform1f(this.cachedIsDarkModeLocation, isDarkMode ? 1.0 : 0.5);
     this.gl.uniform2f(this.cachedResolutionLocation, this.canvas.width, this.canvas.height);
     this.gl.uniform1f(this.cachedTimeLocation, now * 0.001);
+    this.gl.uniform1i(this.cachedThemeLocation, this.isDarkMode ? 1 : 0);
     this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
   }
 
   cleanup(): void {
-    if (this.vs) {
-      this.gl.deleteShader(this.vs);
-    }
-    if (this.fs) {
-      this.gl.deleteShader(this.fs);
-    }
-    if (this.program) {
-      this.gl.deleteProgram(this.program);
-    }
-    if (this.buffer) {
-      this.gl.deleteBuffer(this.buffer);
-    }
+    if (this.vs) this.gl.deleteShader(this.vs);
+    if (this.fs) this.gl.deleteShader(this.fs);
+    if (this.program) this.gl.deleteProgram(this.program);
+    if (this.buffer) this.gl.deleteBuffer(this.buffer);
   }
 }
 
@@ -154,7 +153,7 @@ const shaderSource = `#version 300 es
     out vec4 O;
     uniform float time;
     uniform vec2 resolution;
-    uniform float isDarkMode;
+    uniform bool isDarkMode;
     #define FC gl_FragCoord.xy
     #define R resolution
     #define T (time * 0.05)
@@ -162,7 +161,6 @@ const shaderSource = `#version 300 es
     #define MN min(R.x,R.y)
     #define PI 3.14159265359
     
-    // Improved noise function for fog
     float hash21(vec2 p) {
         p = fract(p * vec2(234.34, 435.345));
         p += dot(p, p + 34.23);
@@ -212,24 +210,8 @@ const shaderSource = `#version 300 es
       return d;
     }
     
-    // Add a function for anime-style lines
-    float animeLines(vec2 uv) {
-        // Create sharp angular lines
-        float lines = 0.0;
-        
-        // Radial lines
-        float angle = atan(uv.y, uv.x);
-        lines += smoothstep(0.98, 1.0, abs(sin(angle * 8.0 + T))); // 8 radial lines
-        
-        // Circular lines
-        float dist = length(uv);
-        lines += smoothstep(0.98, 1.0, abs(sin(dist * 4.0 - T))); // Pulsing circles
-        
-        return lines * (1.0 - smoothstep(0.0, 1.5, dist)); // Fade out with distance
-    }
-    
     vec3 scene(vec2 uv) {
-      vec3 col = vec3(0.0);
+      vec3 col = vec3(0);
       vec2 uv1 = uv;
       vec2 uv2 = uv + vec2(-1.0, 0.0);
       
@@ -242,39 +224,21 @@ const shaderSource = `#version 300 es
       for (float i = 0.0; i < 3.0; i++) {
         int k = int(mod(i, 3.0));
         float intensity = 0.7 + 0.1 * sin(T + i);
+        
         float fog1 = fogEffect(uv1 + vec2(T * 0.1), 0.3);
         float fog2 = fogEffect(uv2 + vec2(T * 0.1), 0.3);
         
-        // Add 20% more intensity in dark mode
-        float finalIntensity = isDarkMode > 1.0 ? intensity *0.1 : intensity;
-        
-        col[k] += pattern(uv1 + i * spacing/MN) * finalIntensity * (1.0 + fog1);
-        col[k] += pattern(uv2 + i * spacing/MN) * finalIntensity * (1.0 + fog2);
+        col[k] += pattern(uv1 + i * spacing/MN) * intensity * (1.0 + fog1);
+        col[k] += pattern(uv2 + i * spacing/MN) * intensity * (1.0 + fog2);
       }
       return col;
-    }
-    
-    
-    // Add edge detection for rim lighting
-    float getRimLight(vec2 uv, float width, float falloff) {
-        float dist = length(uv);
-        float radialGradient = 1.0 - dist;
-        
-        // Create sharp edge transition
-        float edge = smoothstep(width - falloff, width, radialGradient);
-        edge *= smoothstep(width + falloff, width, radialGradient);
-        
-        // Add some variation to make it more interesting
-        float angleVar = abs(sin(atan(uv.y, uv.x) * 6.0 + T));
-        edge *= (0.8 + 0.2 * angleVar);
-        
-        return edge;
     }
     
     void main() {
       vec2 uv = (FC - 0.5 * R)/MN;
       vec3 col = vec3(0);
       float s = 6.0;
+      float e = 5e-4;
       
       vec2 staticUV = uv;
       uv.y += T * 0.25;
@@ -286,24 +250,30 @@ const shaderSource = `#version 300 es
         abs(sin(rotatedUV.x * s)),
         abs(cos(rotatedUV.y * s))
       );
-      
-      if (isDarkMode > 0.1) {
-        col += vec3(step(0.95, gridPattern)) * 0.03;
-      } else {
-        col += vec3(step(0.95, gridPattern)) * 0.03;
-      }
+      col += vec3(step(0.95, gridPattern)) * 0.03;
       
       staticUV.y += R.x > R.y ? 0.5 : 0.5 * (R.y/R.x);
       
-      vec3 sceneColor = scene(staticUV);
+      float baseFog = fogEffect(uv * 2.0, 0.2);
+      col += vec3(baseFog * 0.1);
+      
+      vec3 sceneColor = scene(staticUV) * 0.8;
+      float sceneFog = fogEffect(staticUV * 1.5, 0.4);
+      sceneColor *= 1.0 + sceneFog * 0.3;
       col += sceneColor;
       
-      float alpha = isDarkMode > 0.5 ? 0.2 : 0.15;
-      float intensity = isDarkMode > 0.5 ? 0.8 : 0.6;
-      O = vec4(col * intensity, alpha);
+      vec3 finalColor = col * 0.6;
+      if (isDarkMode) {
+          finalColor = vec3(1.0) - finalColor;
+      }
+      
+      O = vec4(finalColor, 0.15);
     }`;
 
-const AnimatedBackground: React.FC = () => {
+const AnimatedBackground = () => {
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<Renderer | null>(null);
   const frameIdRef = useRef<number>(0);
@@ -314,12 +284,10 @@ const AnimatedBackground: React.FC = () => {
 
     const canvas = canvasRef.current;
     const dpr = Math.max(1, window.devicePixelRatio);
-    rendererRef.current = new Renderer(canvas, dpr);
+    rendererRef.current = new Renderer(canvas, dpr, isDarkMode);
 
     const resize = () => {
       if (!canvas) return;
-
-      // Debounce resize operations
       window.clearTimeout(resizeTimeoutRef.current);
       resizeTimeoutRef.current = window.setTimeout(() => {
         const { innerWidth: width, innerHeight: height } = window;
@@ -345,12 +313,18 @@ const AnimatedBackground: React.FC = () => {
       cancelAnimationFrame(frameIdRef.current);
       rendererRef.current?.cleanup();
     };
-  }, []);
+  }, [isDarkMode]);
+
+  useEffect(() => {
+    if (rendererRef.current) {
+      rendererRef.current.updateTheme(isDarkMode);
+    }
+  }, [isDarkMode]);
 
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none fixed inset-0 h-full w-full bg-black dark:bg-white"
+      className="pointer-events-none fixed inset-0 h-full w-full"
       style={{
         position: 'fixed',
         top: 0,

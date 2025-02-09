@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, X, Minus, Square } from 'lucide-react';
 import TerminalLine from './TerminalLine';
@@ -24,15 +24,7 @@ const TerminalWindow = ({ messages, onComplete }: TerminalWindowProps) => {
   const terminalContentRef = useRef<HTMLDivElement>(null);
   const lastScrollPositionRef = useRef(0);
 
-  useEffect(() => {
-    setMounted(true);
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      completedRef.current = false;
-    };
-  }, []);
-
-  const handleVisibleLines = () => {
+  const handleVisibleLines = useCallback(() => {
     setVisibleLines((prev) => {
       if (prev < messages.length) {
         return prev + 1;
@@ -44,17 +36,25 @@ const TerminalWindow = ({ messages, onComplete }: TerminalWindowProps) => {
       if (timerRef.current) clearInterval(timerRef.current);
       return prev;
     });
-  };
+  }, [messages.length, onComplete]);
 
-  const startMessageAnimation = () => {
+  const startMessageAnimation = useCallback(() => {
     const interval = setInterval(() => {
       if (!isPausedRef.current) {
         handleVisibleLines();
       }
     }, 2000);
-    
+
     timerRef.current = interval;
-  };
+  }, [handleVisibleLines]);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      completedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     setVisibleLines(0);
@@ -67,7 +67,7 @@ const TerminalWindow = ({ messages, onComplete }: TerminalWindowProps) => {
       clearTimeout(timeoutId);
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [messages, onComplete]);
+  }, [messages, onComplete, startMessageAnimation]);
 
   useEffect(() => {
     if (terminalContentRef.current) {

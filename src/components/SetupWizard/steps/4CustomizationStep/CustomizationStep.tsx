@@ -70,7 +70,9 @@ export const CustomizationStep: React.FC<CustomizationStepProps> = ({
             subtitle="Choose how you want your authentication to look"
             backLabel="Back to Setup"
             showHelp={showHelp}
-            onBack={() => {console.log('test')}}
+            onBack={() => {
+              console.log('test');
+            }}
             onHelp={() => setShowHelp(!showHelp)}
           />
 

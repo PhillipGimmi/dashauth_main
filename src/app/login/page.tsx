@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import { Suspense } from 'react';
 import DarkGridAuth from '@/components/DarkGridAuth/DarkGridAuth';
@@ -13,15 +12,14 @@ export default function SignInPage() {
       {/* Radial gradient overlay */}
       <div
         style={{
-          backgroundImage:
-            'radial-gradient(100% 100% at 100% 0%, rgba(9,9,11,0), rgba(9,9,11,1))',
+          backgroundImage: 'radial-gradient(100% 100% at 100% 0%, rgba(9,9,11,0), rgba(9,9,11,1))',
         }}
-        className="absolute inset-0 pointer-events-none"
+        className="pointer-events-none absolute inset-0"
       />
       {/* Main content */}
       <Suspense
         fallback={
-          <div className="flex items-center justify-center min-h-screen">
+          <div className="flex min-h-screen items-center justify-center">
             <div className="text-zinc-400">Loading...</div>
           </div>
         }
