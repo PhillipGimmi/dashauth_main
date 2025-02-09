@@ -36,13 +36,13 @@ export function AuthHydration() {
           ok: response.ok,
         });
 
-        if (response.ok) {
-          const userData = await response.json();
-          console.log('✅ Session valid, user data:', userData);
-          setUser(userData);
+        const data = await response.json();
+
+        if (response.ok && data.authenticated) {
+          console.log('✅ Session valid, user data:', data);
+          setUser(data);
         } else {
-          const error = await response.json();
-          console.log('❌ Session invalid:', error);
+          console.log('ℹ️ Not authenticated:', data.message || 'No session');
           setUser(null);
         }
       } catch (error) {
@@ -51,8 +51,6 @@ export function AuthHydration() {
       }
     }
 
-    // Check if we have cookies
-    console.log('🍪 Current cookies:', document.cookie);
     verifySession();
   }, [setUser]);
 

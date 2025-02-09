@@ -8,13 +8,14 @@ export const metadata = {
 };
 export default function SignInPage() {
   return (
-    <div className="relative min-h-screen bg-zinc-950">
-      {/* Radial gradient overlay */}
+    <div className="relative min-h-screen bg-white dark:bg-zinc-950">
+      {/* Radial gradient overlay - updated for dark mode */}
       <div
         style={{
-          backgroundImage: 'radial-gradient(100% 100% at 100% 0%, rgba(9,9,11,0), rgba(9,9,11,1))',
+          backgroundImage:
+            'radial-gradient(100% 100% at 100% 0%, rgba(255,255,255,0), rgba(255,255,255,1))',
         }}
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 dark:[background-image:radial-gradient(100%_100%_at_100%_0%,rgba(9,9,11,0),rgba(9,9,11,1))]"
       />
       {/* Main content */}
       <Suspense

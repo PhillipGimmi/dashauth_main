@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import React, { useState } from 'react';
-import type { FormState } from '@/types/auth';
+import type { FormState } from '@/app/types/auth';
 
 const containerVariants = {
   initial: { opacity: 0, y: 20 },

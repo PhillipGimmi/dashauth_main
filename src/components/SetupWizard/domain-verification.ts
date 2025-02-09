@@ -1,7 +1,7 @@
-import { VerificationPayload } from '@/types';
+import { VerificationPayload } from '@/app/types';
 
 import { DNS_PROVIDERS, DOMAIN_VERIFICATION_FAQ } from '@/data/faqData';
-import { scriptVerification } from '@/lib/scriptVerification';
+import { scriptVerification } from '@/app/lib/scriptVerification';
 
 export async function verifyDomainInstallation(payload: VerificationPayload) {
   try {

@@ -6,7 +6,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { StepHeader } from '../../StepHeader/StepHeader';
 import { SETUP_OPTIONS } from '@/constants/constants';
 import { FAQ_ITEMS } from '@/data/faqData';
-import { MousePosition, SetupOption } from '@/types/types';
+import { MousePosition, SetupOption } from '@/app/types/types';
 
 export interface PlatformStepProps {
   mousePositions: Record<string, MousePosition>;

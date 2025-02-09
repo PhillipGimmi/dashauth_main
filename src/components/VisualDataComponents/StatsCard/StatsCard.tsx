@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AreaChart,
@@ -45,7 +45,10 @@ const CustomTooltipWrapper: React.FC<TooltipProps<number, string>> = ({
   payload,
   label,
 }) => {
-  const previousPeriodData = useMemo(() => generatePreviousPeriodData(dummyPreviousPeriodData), []);
+  const previousPeriodData = React.useMemo(
+    () => generatePreviousPeriodData(dummyPreviousPeriodData),
+    []
+  );
 
   if (active && payload && payload.length > 0 && label) {
     const currentValue = payload[0]?.value;
@@ -138,14 +141,14 @@ const StatsCardHeader: React.FC<{
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center space-x-3">
-        <IconComponent className="h-5 w-5 text-zinc-400 dark:text-zinc-600" />
-        <span className="text-sm text-zinc-400 dark:text-zinc-600">{label}</span>
+        <IconComponent className="h-5 w-5 text-zinc-400 dark:text-zinc-200" />
+        <span className="text-sm text-zinc-400 dark:text-zinc-200">{label}</span>
       </div>
       <input
         type="button"
         value={`${change >= 0 ? '▲' : '▼'} ${Math.abs(change)}%`}
         className={`text-sm font-medium ${
-          change >= 0 ? 'text-green-400' : 'text-red-400'
+          change >= 0 ? 'text-green-400 dark:text-green-300' : 'text-red-400 dark:text-red-300'
         } flex cursor-pointer items-center gap-1`}
         onClick={(e) => e.stopPropagation()}
         onMouseEnter={(e) => handleMouseEvent(e, '24h trend')}
@@ -270,12 +273,6 @@ const StatsCard: React.FC<StatsCardProps> = ({ stat, index, isExpanded, onToggle
   const handleTooltip = (config: TooltipConfig | null) => {
     console.log('Tooltip:', config);
   };
-
-  useEffect(() => {
-    if (isExpanded) {
-      onToggle();
-    }
-  }, [isExpanded, onToggle]);
 
   return (
     <motion.div

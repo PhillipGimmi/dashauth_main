@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import StatsCard from '../StatsCard/StatsCard';
 import { AuthStat } from '../../Tooltip/Tooltip';
-import { useCardStore } from '../../ThemeToggle/ThemeToggle';
+import { useCardStore } from '@/stores/cardStore';
+import { useTheme } from '@/context/ThemeContext';
 
 export interface StatsGridProps {
   stats: AuthStat[];
@@ -16,12 +17,22 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats }) => {
   );
 
   const { onCollapseAll } = useCardStore();
+  const { theme } = useTheme();
+
+  // Listen for theme changes to collapse cards
+  useEffect(() => {
+    setExpandedCards(new Array(stats.length).fill(false));
+  }, [theme, stats.length]);
 
   // Listen for collapse all events
   useEffect(() => {
-    onCollapseAll(() => {
+    const handleCollapse = () => {
       setExpandedCards(new Array(stats.length).fill(false));
-    });
+    };
+
+    // Just call onCollapseAll and handle collapse
+    onCollapseAll();
+    handleCollapse();
   }, [onCollapseAll, stats.length]);
 
   const toggleCard = (index: number) => {

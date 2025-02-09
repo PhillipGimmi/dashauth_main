@@ -1,6 +1,6 @@
 'use client';
 
-import { AuthXeroUser } from '@/types/auth';
+import { AuthXeroUser } from '@/app/types/auth';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 

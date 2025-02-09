@@ -1,4 +1,4 @@
-import { SecurityHeaders, VerificationStatus } from '@/types';
+import { SecurityHeaders, VerificationStatus } from '@/app/types';
 import { createClient } from '@supabase/supabase-js';
 
 class ScriptVerificationService {

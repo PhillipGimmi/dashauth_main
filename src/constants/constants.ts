@@ -1,5 +1,5 @@
 // constants.ts
-import { SetupOption } from '@/types/types';
+import { SetupOption } from '@/app/types/types';
 import { Globe, Smartphone, TabletSmartphone } from 'lucide-react';
 
 export const COMMON_EMAIL_PROVIDERS = [

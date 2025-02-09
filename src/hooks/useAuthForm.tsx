@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthMode, FormState } from '@/types/auth';
+import { AuthMode, FormState } from '@/app/types/auth';
 import { useAuthStore } from '@/store/authStore';
 
 const initialState: FormState = {

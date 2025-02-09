@@ -9,7 +9,7 @@ import { VerificationForm } from './VerificationForm';
 
 import { useAuthForm } from '@/hooks/useAuthForm';
 import { ResetPasswordForm } from './ResetPasswordForm';
-import { AuthMode } from '@/types/auth';
+import { AuthMode } from '@/app/types/auth';
 import ShimmerButton from '../ShimmerButton/ShimmerButton';
 
 const formVariants = {

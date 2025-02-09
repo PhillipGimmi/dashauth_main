@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import type { AuthMode } from '@/types/auth';
+import type { AuthMode } from '@/app/types/auth';
 import { Meteors } from './Meteors';
 import { Stars } from './Stars';
 import CornerGrid from './CornerGrid';

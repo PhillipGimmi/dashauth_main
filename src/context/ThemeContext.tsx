@@ -40,6 +40,21 @@ export function ThemeProvider({ children }: { readonly children: React.ReactNode
     // Keep the media query listener in case you want to add it back later
   }, []);
 
+  useEffect(() => {
+    // Apply theme on mount and theme changes
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.body.classList.remove('light-mode');
+      document.body.classList.add('dark-mode');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.body.classList.remove('dark-mode');
+      document.body.classList.add('light-mode');
+    }
+  }, [theme]);
+
   const handleThemeChange = (newTheme: Theme) => {
     if (newTheme !== 'light' && newTheme !== 'dark') return;
     // First hide charts

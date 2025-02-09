@@ -17,8 +17,8 @@ import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 
 import { StepHeader } from '../../StepHeader/StepHeader';
 
-import { cn } from '@/lib/utils';
-import { PlatformId } from '@/types/types'; // Adjust the import path as needed
+import { cn } from '@/app/lib/utils';
+import { PlatformId } from '@/app/types/types'; // Adjust the import path as needed
 
 interface SetupStepProps {
   readonly domain: string;

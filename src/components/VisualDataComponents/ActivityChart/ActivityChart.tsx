@@ -226,16 +226,23 @@ const ActivityChart: React.FC<ActivityChartProps> = ({
 
           <XAxis
             dataKey="time"
-            tick={{ fill: 'currentColor', fontSize: 12 }}
+            tick={{
+              fill: document.documentElement.classList.contains('dark') ? '#171717' : '#FFFFFF',
+              fontSize: 12,
+            }}
             stroke="currentColor"
             interval={Math.ceil(currentPeriodData.length / 5)}
           />
 
           <YAxis
-            tick={{ fill: 'currentColor', fontSize: 12 }}
+            tick={{
+              fill: document.documentElement.classList.contains('dark') ? '#171717' : '#FFFFFF',
+              fontSize: 12,
+            }}
             stroke="currentColor"
             axisLine={{ stroke: 'currentColor' }}
             tickLine={{ stroke: 'currentColor' }}
+            tickFormatter={(value) => value.toLocaleString()}
           />
 
           <Tooltip

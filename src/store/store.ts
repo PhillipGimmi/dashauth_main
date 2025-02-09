@@ -1,4 +1,4 @@
-import { PlatformId } from '@/types/types';
+import { PlatformId } from '@/app/types/types';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 

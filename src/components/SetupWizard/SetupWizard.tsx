@@ -14,7 +14,7 @@ import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
 import DomainStepWrapper from './steps/1DomainStep/DomainStepWrapper';
 import { ProgressBar } from '../ProgressBar/ProgressBar';
 import { SETUP_OPTIONS } from '@/constants/constants';
-import { SetupOption } from '@/types/types';
+import { SetupOption } from '@/app/types/types';
 import { useWizardStore } from '@/store/store';
 
 interface SetupWizardProps {
