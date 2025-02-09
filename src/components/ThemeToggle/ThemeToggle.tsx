@@ -7,7 +7,7 @@ interface EclipseToggleProps {
 }
 
 const EclipseToggle: React.FC<EclipseToggleProps> = ({ onThemeChange }) => {
-  const [animationState, setAnimationState] = useState(0);
+  const [animationState, setAnimationState] = useState(2);
   const [isVisible, setIsVisible] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -120,6 +120,24 @@ const EclipseToggle: React.FC<EclipseToggleProps> = ({ onThemeChange }) => {
       setIsVisible(true);
     }
   }, [isTransitioning]);
+
+  // Add useEffect to set initial theme
+  useEffect(() => {
+    // Set initial theme to light mode
+    onThemeChange?.('light');
+    
+    // Pause animations in light mode position
+    const moon = document.querySelector('.moon') as HTMLElement;
+    const sun = document.querySelector('.four.move') as HTMLElement;
+    
+    if (moon && sun) {
+      // Set initial position for light mode
+      moon.style.backgroundPosition = '50% 50%';
+      sun.style.left = '0px';
+      moon.style.animationPlayState = 'paused';
+      sun.style.animationPlayState = 'paused';
+    }
+  }, [onThemeChange]);
 
   return (
     <div
