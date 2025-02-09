@@ -18,10 +18,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => (
     transition={{ duration: 0.6 }}
     className="mb-20 text-center"
   >
-    <h2 className="mb-6 text-4xl font-bold text-white md:text-5xl lg:text-6xl">
+    <h2 className="mb-6 text-4xl font-bold text-white dark:text-black md:text-5xl lg:text-6xl">
       {user?.name ? `Welcome, ${user.name}` : 'Powerful Authentication Dashboard'}
     </h2>
-    <p className="mx-auto max-w-3xl text-lg text-zinc-400 md:text-xl">
+    <p className="mx-auto max-w-3xl text-lg text-zinc-400 dark:text-zinc-600 md:text-xl">
       Real-time insights and analytics for your authentication system. Automatic monitoring, user
       trends, and detailed dashboards included.
     </p>

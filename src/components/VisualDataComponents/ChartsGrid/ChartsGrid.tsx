@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useTheme } from 'next-themes';
 
 import ChartCard from '../ChartCard/ChartCard';
 import ActivityChart from '../ActivityChart/ActivityChart';
@@ -121,10 +122,18 @@ const geoData = [
 ].reverse();
 
 const ChartsGrid = () => {
-  const activityChartData = generateReversedActivityData();
+  const { resolvedTheme } = useTheme();
+  const [showCharts, setShowCharts] = useState(true);
+
+  // Force remount of charts when theme changes
+  useEffect(() => {
+    setShowCharts(false);
+    const timer = setTimeout(() => setShowCharts(true), 50);
+    return () => clearTimeout(timer);
+  }, [resolvedTheme]);
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+    <div key={resolvedTheme} className="grid grid-cols-1 gap-8 dark:text-black lg:grid-cols-2">
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -136,7 +145,7 @@ const ChartsGrid = () => {
         <ChartCard
           title="Authentication Activity"
           subtitle="Real-time authentication patterns and trends"
-          chart={<ActivityChart data={activityChartData} timeRange="24h" />}
+          chart={<ActivityChart data={generateReversedActivityData()} timeRange="24h" />}
         />
       </motion.div>
 
@@ -147,11 +156,13 @@ const ChartsGrid = () => {
         transition={{ duration: 0.6 }}
         whileHover={{ scale: 1.01 }}
       >
-        <ChartCard
-          title="Authentication Methods"
-          subtitle="Security distribution analysis"
-          chart={<AuthMethodsChart data={authMethodsData} />}
-        />
+        {showCharts && (
+          <ChartCard
+            title="Authentication Methods"
+            subtitle="Security distribution analysis"
+            chart={<AuthMethodsChart data={authMethodsData} />}
+          />
+        )}
       </motion.div>
 
       <motion.div

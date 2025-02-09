@@ -110,43 +110,50 @@ const TerminalWindow = ({ messages, onComplete }: TerminalWindowProps) => {
   if (!mounted) return null;
 
   return (
-    <div
+    <section
+      aria-label="Terminal window"
       className="flex h-[530px] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-gray-700/50 bg-gray-900/95 shadow-2xl backdrop-blur-md dark:border-gray-300/50 dark:bg-white/95"
-      onMouseEnter={() => setIsInteractive(true)}
-      onMouseLeave={() => setIsInteractive(false)}
     >
-      <div className="flex flex-shrink-0 items-center border-b border-gray-700/50 bg-gray-800/90 px-4 py-3 dark:border-gray-300/50 dark:bg-gray-100/90">
+      <header className="flex flex-shrink-0 items-center border-b border-gray-700/50 bg-gray-800/90 px-4 py-3 dark:border-gray-300/50 dark:bg-gray-100/90">
         <div className="flex gap-2">
-          <motion.div
-            className="group relative h-3.5 w-3.5 cursor-pointer rounded-full bg-gray-400/90 dark:bg-gray-600/90"
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
+          <button
+            aria-label="Close terminal"
+            className="group relative h-3.5 w-3.5 cursor-pointer rounded-full bg-gray-400/90 transition-transform hover:scale-110 dark:bg-gray-600/90"
+            onClick={() => {
+              /* Add close handler */
+            }}
           >
             <X className="absolute inset-0 h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-50" />
-          </motion.div>
-          <motion.div
-            className="group relative h-3.5 w-3.5 cursor-pointer rounded-full bg-gray-500/90 dark:bg-gray-500/90"
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
+          </button>
+          <button
+            aria-label="Minimize terminal"
+            className="group relative h-3.5 w-3.5 cursor-pointer rounded-full bg-gray-500/90 transition-transform hover:scale-110 dark:bg-gray-500/90"
+            onClick={() => {
+              /* Add minimize handler */
+            }}
           >
             <Minus className="absolute inset-0 h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-50" />
-          </motion.div>
-          <motion.div
-            className="group relative h-3.5 w-3.5 cursor-pointer rounded-full bg-gray-600/90 dark:bg-gray-400/90"
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
+          </button>
+          <button
+            aria-label="Maximize terminal"
+            className="group relative h-3.5 w-3.5 cursor-pointer rounded-full bg-gray-600/90 transition-transform hover:scale-110 dark:bg-gray-400/90"
+            onClick={() => {
+              /* Add maximize handler */
+            }}
           >
             <Square className="absolute inset-0 h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-50" />
-          </motion.div>
+          </button>
         </div>
         <span className="ml-4 font-mono text-lg font-medium text-gray-200 dark:text-gray-800">
           <span className="hidden sm:inline">dash-auth-terminal</span>
           <span className="inline sm:hidden">terminal</span>
         </span>
-      </div>
+      </header>
 
       <div
         ref={terminalContentRef}
+        role="log"
+        aria-live="polite"
         onScroll={handleScroll}
         className="scrollbar-thin scrollbar-track-gray-800/50 scrollbar-thumb-gray-600/50 hover:scrollbar-thumb-gray-500/50 dark:scrollbar-track-gray-200/50 dark:scrollbar-thumb-gray-400/50 dark:hover:scrollbar-thumb-gray-500/50 flex-1 space-y-2 overflow-y-auto p-6 font-mono text-base transition-colors [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-600/50 dark:[&::-webkit-scrollbar-thumb]:bg-gray-400/50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-800/50 dark:[&::-webkit-scrollbar-track]:bg-gray-200/50 [&::-webkit-scrollbar]:w-2.5"
       >
@@ -173,29 +180,39 @@ const TerminalWindow = ({ messages, onComplete }: TerminalWindowProps) => {
         </AnimatePresence>
 
         {isInteractive && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (inputValue.trim()) {
+                handleCommand(inputValue);
+              }
+            }}
             className="mt-4 flex items-center gap-3 text-gray-100 dark:text-gray-800"
           >
-            <ChevronRight className="h-5 w-5 text-green-400 dark:text-green-500" />
+            <ChevronRight
+              aria-hidden="true"
+              className="h-5 w-5 text-green-400 dark:text-green-500"
+            />
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && inputValue.trim()) {
-                  handleCommand(inputValue);
+              onFocus={() => setIsInteractive(true)}
+              onBlur={(e) => {
+                // Only set interactive to false if we're not clicking inside the terminal
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                  setIsInteractive(false);
                 }
               }}
+              aria-label="Terminal input"
               className="flex-1 border-none bg-transparent font-mono text-base text-gray-100 antialiased placeholder-gray-500/70 outline-none dark:text-gray-800 dark:placeholder-gray-400/70"
               placeholder="Type 'help' for available commands..."
               autoFocus
             />
-          </motion.div>
+          </form>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 

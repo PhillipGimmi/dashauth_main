@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AreaChart,
@@ -9,7 +9,7 @@ import {
   Tooltip,
   TooltipProps,
 } from 'recharts';
-import { AuthStat, contentVariants, CustomTooltip } from '../../Tooltip/Tooltip';
+import { AuthStat, contentVariants } from '../../Tooltip/Tooltip';
 
 interface DataPoint {
   time: string;
@@ -20,6 +20,8 @@ interface DataPoint {
 export interface StatsCardProps {
   stat: AuthStat;
   index: number;
+  isExpanded: boolean;
+  onToggle: () => void;
 }
 
 const generatePreviousPeriodData = (currentData: DataPoint[]): DataPoint[] => {
@@ -63,18 +65,32 @@ const CustomTooltipWrapper: React.FC<TooltipProps<number, string>> = ({
           flexDirection: 'row',
           alignItems: 'center',
           gap: '16px',
-          backgroundColor: '#1A1A1A',
+          backgroundColor: document.documentElement.classList.contains('dark')
+            ? '#FFFFFF'
+            : '#1A1A1A',
           borderRadius: '8px',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          color: '#FFFFFF',
+          color: document.documentElement.classList.contains('dark') ? '#171717' : '#FFFFFF',
         }}
       >
         <div style={{ flex: '1', textAlign: 'left' }}>
-          <div style={{ fontSize: '12px', color: '#9CA3AF' }}>{label}</div>
+          <div
+            style={{
+              fontSize: '12px',
+              color: document.documentElement.classList.contains('dark') ? '#4B5563' : '#9CA3AF',
+            }}
+          >
+            {label}
+          </div>
           <div style={{ fontSize: '24px', fontWeight: 'bold', margin: '4px 0' }}>
             {currentValue.toLocaleString()}
           </div>
-          <div style={{ fontSize: '12px', color: '#6B7280' }}>
+          <div
+            style={{
+              fontSize: '12px',
+              color: '#6B7280',
+            }}
+          >
             Previous: {previousValue.toLocaleString()}
           </div>
         </div>
@@ -97,177 +113,232 @@ const CustomTooltipWrapper: React.FC<TooltipProps<number, string>> = ({
   return null;
 };
 
-const StatsCard: React.FC<StatsCardProps> = ({ stat, index }) => {
-  const [showGraph, setShowGraph] = useState(false);
-  const [tooltipConfig, setTooltipConfig] = useState<{
-    text: string;
-    position: { x: number; y: number };
-  } | null>(null);
-  const [[page, direction], setPage] = useState([0, 0]);
+// Extract tooltip configuration type
+interface TooltipConfig {
+  text: string;
+  position: { x: number; y: number };
+}
 
-  const handleMouseEnter = (e: React.MouseEvent, text: string) => {
-    setTooltipConfig({ text, position: { x: e.clientX, y: e.clientY } });
+// Add at the top with other utility functions
+const createTooltipHandler =
+  (onTooltipChange: (config: TooltipConfig | null) => void) =>
+  (e: React.MouseEvent, text?: string) => {
+    onTooltipChange(text ? { text, position: { x: e.clientX, y: e.clientY } } : null);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (tooltipConfig) {
-      setTooltipConfig({
-        ...tooltipConfig,
-        position: { x: e.clientX, y: e.clientY },
-      });
+// Extract header component
+const StatsCardHeader: React.FC<{
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  change: number;
+  onTooltipChange: (config: TooltipConfig | null) => void;
+}> = ({ icon: IconComponent, label, change, onTooltipChange }) => {
+  const handleMouseEvent = createTooltipHandler(onTooltipChange);
+
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center space-x-3">
+        <IconComponent className="h-5 w-5 text-zinc-400 dark:text-zinc-600" />
+        <span className="text-sm text-zinc-400 dark:text-zinc-600">{label}</span>
+      </div>
+      <input
+        type="button"
+        value={`${change >= 0 ? '▲' : '▼'} ${Math.abs(change)}%`}
+        className={`text-sm font-medium ${
+          change >= 0 ? 'text-green-400' : 'text-red-400'
+        } flex cursor-pointer items-center gap-1`}
+        onClick={(e) => e.stopPropagation()}
+        onMouseEnter={(e) => handleMouseEvent(e, '24h trend')}
+        onMouseMove={(e) => handleMouseEvent(e, '24h trend')}
+        onMouseLeave={() => handleMouseEvent({} as React.MouseEvent)}
+        aria-label={`Change: ${change >= 0 ? 'Increase' : 'Decrease'} ${Math.abs(change)}%`}
+        tabIndex={0}
+      />
+    </div>
+  );
+};
+
+// Extract value display component
+const ValueDisplay: React.FC<{
+  value: number | string;
+  description: string;
+  onTooltipChange: (config: TooltipConfig | null) => void;
+}> = ({ value, description, onTooltipChange }) => {
+  const handleMouseEvent = createTooltipHandler(onTooltipChange);
+
+  return (
+    <motion.div
+      className="mb-1 text-6xl font-bold text-white dark:text-zinc-900"
+      onMouseEnter={(e) => handleMouseEvent(e, description)}
+      onMouseMove={(e) => handleMouseEvent(e, description)}
+      onMouseLeave={() => handleMouseEvent({} as React.MouseEvent)}
+      whileHover={{
+        textShadow: document.documentElement.classList.contains('dark')
+          ? '0 0 8px rgba(0,0,0,0.5)'
+          : '0 0 8px rgba(255,255,255,0.5)',
+      }}
+    >
+      {value}
+    </motion.div>
+  );
+};
+
+// Extract graph component with proper typing
+const StatsGraph: React.FC<{
+  graphData: DataPoint[];
+  label: string;
+  index: number;
+}> = ({ graphData, label, index }) => (
+  <ResponsiveContainer width="100%" height="100%">
+    <AreaChart data={graphData} margin={{ left: 15, right: 10, top: 10, bottom: 0 }}>
+      <defs>
+        <linearGradient id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+          <stop
+            offset="5%"
+            stopColor={document.documentElement.classList.contains('dark') ? '#171717' : '#FFFFFF'}
+            stopOpacity={0.3}
+          />
+          <stop
+            offset="95%"
+            stopColor={document.documentElement.classList.contains('dark') ? '#171717' : '#FFFFFF'}
+            stopOpacity={0}
+          />
+        </linearGradient>
+        <clipPath id={`clip-${index}`}>
+          <motion.rect
+            x="0"
+            y="0"
+            width="100%"
+            height="100%"
+            initial={{ width: '0%' }}
+            animate={{ width: '100%' }}
+            transition={{
+              duration: 1,
+              delay: 0.3,
+              ease: 'easeInOut',
+            }}
+          />
+        </clipPath>
+      </defs>
+      <XAxis
+        dataKey="time"
+        tick={{ fill: document.documentElement.classList.contains('dark') ? '#4B5563' : '#9CA3AF' }}
+        interval={3}
+      />
+      <YAxis
+        tick={{ fill: document.documentElement.classList.contains('dark') ? '#4B5563' : '#9CA3AF' }}
+        width={45}
+        tickFormatter={(value) => value.toLocaleString()}
+        domain={label === 'Auth Success' ? [99.8, 100] : ['auto', 'auto']}
+      />
+      <Tooltip content={<CustomTooltipWrapper />} />
+      <Area
+        type="monotone"
+        name={label === 'Auth Success' ? 'successRate' : 'value'}
+        dataKey={label === 'Auth Success' ? 'successRate' : 'value'}
+        stroke={document.documentElement.classList.contains('dark') ? '#171717' : '#FFFFFF'}
+        fill={`url(#gradient-${index})`}
+        strokeWidth={2}
+        isAnimationActive={false}
+        clipPath={`url(#clip-${index})`}
+      />
+    </AreaChart>
+  </ResponsiveContainer>
+);
+
+// Extract details component
+const AuthDetails: React.FC<{
+  details: Array<{ reason: string; percentage: number }>;
+}> = ({ details }) => (
+  <motion.div
+    initial={{ opacity: 0, height: 0 }}
+    animate={{ opacity: 1, height: 'auto' }}
+    className="mt-4 border-t border-zinc-800 pt-4 dark:border-zinc-200"
+  >
+    <p className="mb-2 text-sm text-zinc-400 dark:text-zinc-600">Authentication Failures</p>
+    {details.map((detail) => (
+      <div key={detail.reason} className="mb-1 flex justify-between text-sm">
+        <span className="text-zinc-400 dark:text-zinc-600">{detail.reason}</span>
+        <span className="text-white dark:text-zinc-900">{detail.percentage}%</span>
+      </div>
+    ))}
+  </motion.div>
+);
+
+// Main StatsCard component with reduced complexity
+const StatsCard: React.FC<StatsCardProps> = ({ stat, index, isExpanded, onToggle }) => {
+  const handleTooltip = (config: TooltipConfig | null) => {
+    console.log('Tooltip:', config);
+  };
+
+  useEffect(() => {
+    if (isExpanded) {
+      onToggle();
     }
-  };
-
-  const toggleView = () => {
-    setTooltipConfig(null);
-    setPage([page === 0 ? 1 : 0, page === 0 ? 1 : -1]);
-    setShowGraph(!showGraph);
-  };
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setTooltipConfig(null);
-  };
-
-  const IconComponent = stat.icon;
+  }, [isExpanded, onToggle]);
 
   return (
     <motion.div
       layout
-      className="w-full overflow-hidden rounded-xl border border-zinc-800 bg-[#1A1A1A]"
+      className="w-full overflow-hidden rounded-xl border border-zinc-800 bg-[#1A1A1A] dark:border-zinc-200 dark:bg-white"
       whileHover={{ scale: 1.01 }}
       transition={{ type: 'spring', stiffness: 400 }}
     >
       <button
-        onClick={toggleView}
-        onKeyDown={(e) => e.key === 'Enter' && toggleView()}
-        className="w-full p-6 text-left focus:outline-none focus:ring-2 focus:ring-zinc-700"
-        aria-expanded={showGraph}
-        aria-label={`Show ${showGraph ? 'value' : 'graph'} for ${stat.label}`}
+        onClick={onToggle}
+        onKeyDown={(e) => e.key === 'Enter' && onToggle()}
+        className="w-full p-6 text-left focus:outline-none focus:ring-2 focus:ring-zinc-700 dark:focus:ring-zinc-300"
+        aria-expanded={isExpanded}
+        aria-label={`Show ${isExpanded ? 'value' : 'graph'} for ${stat.label}`}
       >
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <IconComponent className="h-5 w-5 text-zinc-400" />
-              <span className="text-sm text-zinc-400">{stat.label}</span>
-            </div>
-            <input
-              type="button"
-              value={`${stat.change >= 0 ? '▲' : '▼'} ${Math.abs(stat.change)}%`}
-              className={`text-sm font-medium ${stat.change >= 0 ? 'text-green-400' : 'text-red-400'} flex cursor-pointer items-center gap-1`}
-              onClick={handleClick}
-              onMouseEnter={(e) => handleMouseEnter(e, '24h trend')}
-              onMouseMove={handleMouseMove}
-              onMouseLeave={() => setTooltipConfig(null)}
-              aria-label={`Change: ${stat.change >= 0 ? 'Increase' : 'Decrease'} ${Math.abs(stat.change)}%`}
-              tabIndex={0}
-            />
-          </div>
+          <StatsCardHeader
+            icon={stat.icon}
+            label={stat.label}
+            change={stat.change}
+            onTooltipChange={handleTooltip}
+          />
+
           <div className="relative overflow-hidden">
-            <AnimatePresence initial={false} custom={direction} mode="wait">
-              {!showGraph ? (
+            <AnimatePresence initial={false} custom={isExpanded} mode="wait">
+              {!isExpanded ? (
                 <motion.div
                   key="value"
-                  custom={direction}
+                  custom={isExpanded}
                   variants={contentVariants.value}
                   initial="enter"
                   animate="center"
                   exit="exit"
                   transition={{ type: 'tween', duration: 0.3 }}
                   className="py-2 text-center"
-                  onMouseLeave={() => setTooltipConfig(null)}
                 >
-                  <motion.div
-                    className="mb-1 text-6xl font-bold text-white"
-                    onMouseEnter={(e) => handleMouseEnter(e, stat.description)}
-                    onMouseMove={handleMouseMove}
-                    onMouseLeave={() => setTooltipConfig(null)}
-                    whileHover={{ textShadow: '0 0 8px rgba(255,255,255,0.5)' }}
-                  >
-                    {stat.value}
-                  </motion.div>
+                  <ValueDisplay
+                    value={stat.value}
+                    description={stat.description}
+                    onTooltipChange={handleTooltip}
+                  />
                 </motion.div>
               ) : (
                 <motion.div
                   key="graph"
-                  custom={direction}
+                  custom={isExpanded}
                   variants={contentVariants.graph}
                   initial="enter"
                   animate="center"
                   exit="exit"
                   transition={{ type: 'tween', duration: 0.3 }}
                   className="h-32"
-                  onMouseEnter={() => setTooltipConfig(null)}
                 >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                      data={stat.graphData}
-                      margin={{ left: 15, right: 10, top: 10, bottom: 0 }}
-                    >
-                      <defs>
-                        <linearGradient id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#FFFFFF" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#FFFFFF" stopOpacity={0} />
-                        </linearGradient>
-                        <clipPath id={`clip-${index}`}>
-                          <motion.rect
-                            x="0"
-                            y="0"
-                            width="100%"
-                            height="100%"
-                            initial={{ width: '0%' }}
-                            animate={{ width: '100%' }}
-                            transition={{
-                              duration: 1,
-                              delay: 0.3,
-                              ease: 'easeInOut',
-                            }}
-                          />
-                        </clipPath>
-                      </defs>
-                      <XAxis dataKey="time" tick={{ fill: '#9CA3AF' }} interval={3} />
-                      <YAxis
-                        tick={{ fill: '#9CA3AF' }}
-                        width={45}
-                        tickFormatter={(value) => value.toLocaleString()}
-                        domain={stat.label === 'Auth Success' ? [99.8, 100] : ['auto', 'auto']}
-                      />
-                      <Tooltip content={<CustomTooltipWrapper />} />
-                      <Area
-                        type="monotone"
-                        name={stat.label === 'Auth Success' ? 'successRate' : 'value'}
-                        dataKey={stat.label === 'Auth Success' ? 'successRate' : 'value'}
-                        stroke="#FFFFFF"
-                        fill={`url(#gradient-${index})`}
-                        strokeWidth={2}
-                        isAnimationActive={false}
-                        clipPath={`url(#clip-${index})`}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                  <StatsGraph graphData={stat.graphData} label={stat.label} index={index} />
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-          {showGraph && stat.label === 'Auth Success' && stat.details && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              className="mt-4 border-t border-zinc-800 pt-4"
-            >
-              <p className="mb-2 text-sm text-zinc-400">Authentication Failures</p>
-              {stat.details.map((detail) => (
-                <div key={detail.reason} className="mb-1 flex justify-between text-sm">
-                  <span className="text-zinc-400">{detail.reason}</span>
-                  <span className="text-white">{detail.percentage}%</span>
-                </div>
-              ))}
-            </motion.div>
+
+          {isExpanded && stat.label === 'Auth Success' && stat.details && (
+            <AuthDetails details={stat.details} />
           )}
         </div>
-        {tooltipConfig && (
-          <CustomTooltip text={tooltipConfig.text} mousePosition={tooltipConfig.position} />
-        )}
       </button>
     </motion.div>
   );

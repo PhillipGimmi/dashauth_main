@@ -65,7 +65,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({ text, mousePositio
   return createPortal(
     <div
       className="pointer-events-none fixed z-50 rounded-lg border border-zinc-800 bg-[#1A1A1A] px-3
-                     py-2 text-sm text-zinc-400 shadow-lg"
+                     py-2 text-sm text-zinc-400 shadow-lg dark:border-zinc-200 dark:bg-white dark:text-zinc-600"
       style={{
         left: mousePosition.x,
         top: mousePosition.y,

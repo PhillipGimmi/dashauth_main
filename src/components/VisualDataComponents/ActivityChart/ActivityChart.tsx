@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useTheme } from 'next-themes';
 
 import GraphTooltip from './GraphTooltip';
 import TooltipSection from './TooltipSection';
@@ -16,7 +17,6 @@ interface ActivityChartProps {
   userColor?: string;
   loginColor?: string;
   axisColor?: string;
-  cursorColor?: string;
   data: DataPoint[];
   timeRange: TimeRangeType;
 }
@@ -68,13 +68,13 @@ const PercentageDisplay: React.FC<PercentageDisplayProps> = ({
 };
 
 const ActivityChart: React.FC<ActivityChartProps> = ({
-  userColor = '#FFFFFF',
-  loginColor = '#00FF00',
-  axisColor = '#FFFFFF',
-  cursorColor = '#FFFFFF',
+  userColor = 'var(--chart-user-color, #FFFFFF)',
+  loginColor = '#22C55E',
+  axisColor = 'var(--chart-axis-color, #FFFFFF)',
   data,
   timeRange = '24h',
 }) => {
+  const { theme } = useTheme();
   const [hoveredKey, setHoveredKey] = useState<'users' | 'logins' | null>(null);
   const [displayMode, setDisplayMode] = useState<'users' | 'logins'>('users');
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -158,10 +158,7 @@ const ActivityChart: React.FC<ActivityChartProps> = ({
   };
 
   return (
-    <div
-      className="relative flex h-96 flex-col justify-between rounded-xl p-4 shadow-lg"
-      style={{ background: 'transparent', color: axisColor }}
-    >
+    <div className="relative flex h-96 flex-col justify-between">
       <div className="mb-4 flex items-center justify-between">
         <div className="relative">
           <PercentageDisplay
@@ -195,6 +192,7 @@ const ActivityChart: React.FC<ActivityChartProps> = ({
 
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
+          key={theme}
           data={currentPeriodData}
           margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
           onMouseLeave={() => setHoveredKey(null)}
@@ -228,16 +226,23 @@ const ActivityChart: React.FC<ActivityChartProps> = ({
 
           <XAxis
             dataKey="time"
-            tick={{ fill: axisColor, fontSize: 12 }}
+            tick={{ fill: 'currentColor', fontSize: 12 }}
+            stroke="currentColor"
             interval={Math.ceil(currentPeriodData.length / 5)}
           />
-          <YAxis tick={{ fill: axisColor, fontSize: 12 }} />
+
+          <YAxis
+            tick={{ fill: 'currentColor', fontSize: 12 }}
+            stroke="currentColor"
+            axisLine={{ stroke: 'currentColor' }}
+            tickLine={{ stroke: 'currentColor' }}
+          />
 
           <Tooltip
             content={
               <GraphTooltip hoveredKey={hoveredKey} previousPeriodData={previousPeriodData} />
             }
-            cursor={{ stroke: cursorColor, strokeWidth: 2 }}
+            cursor={{ stroke: 'currentColor', strokeWidth: 2 }}
           />
 
           <Area

@@ -233,8 +233,8 @@ const HeroSection = () => {
                 variants={tabItemVariants}
                 className={`flex items-center gap-3 rounded-xl px-8 py-3.5 text-base backdrop-blur-sm transition-all ${
                   isActive
-                    ? 'border border-orange-500/10 bg-gray-800 text-white dark:border-orange-500/10 dark:bg-white dark:text-black'
-                    : 'border border-gray-800 bg-gray-900/90 text-gray-400 hover:bg-gray-800/90 hover:text-white dark:border-gray-200/20 dark:bg-white/90 dark:text-gray-600 dark:hover:bg-white dark:hover:text-black'
+                    ? 'border border-orange-500/10 bg-gray-800 text-white dark:border-orange-500/10 dark:bg-white dark:text-black dark:shadow-[0_8px_30px_rgb(0,0,0,0.25)]'
+                    : 'border border-gray-800 bg-gray-900/90 text-gray-400 hover:bg-gray-800/90 hover:text-white dark:border-gray-200/20 dark:bg-white/90 dark:text-gray-600 dark:hover:bg-white dark:hover:text-black dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.25)]'
                 }`}
                 whileHover={{
                   scale: 1.02,
@@ -255,7 +255,7 @@ const HeroSection = () => {
           })}
         </div>
         <div className="grid items-stretch gap-8 sm:gap-12 lg:grid-cols-2">
-          <div className="h-full rounded-2xl bg-gray-950/95 p-6 dark:bg-gray-50/95">
+          <div className="h-full rounded-2xl bg-gray-950/95 p-6 dark:bg-white/[0.98] dark:shadow-[0_0_45px_-5px_rgba(0,0,0,0.1)]">
             <div className="relative z-[2] flex h-full flex-col space-y-6 sm:space-y-8">
               <motion.div
                 className="group relative inline-flex w-auto max-w-[100px] cursor-pointer rounded-xl bg-gray-800 p-2 dark:bg-gray-100 sm:p-3 md:max-w-[70px] md:cursor-default"

@@ -15,7 +15,7 @@ export const CustomTooltip: React.FC<TooltipProps> = ({ active, content, mousePo
 
   return createPortal(
     <motion.div
-      className="pointer-events-none fixed z-[99999] w-[220px] rounded-lg border-none bg-[#1A1A1A] p-4 shadow-lg"
+      className="pointer-events-none fixed z-[99999] w-[220px] rounded-lg border-none bg-[#1A1A1A] p-4 shadow-lg dark:bg-white"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       style={{
@@ -25,18 +25,24 @@ export const CustomTooltip: React.FC<TooltipProps> = ({ active, content, mousePo
       }}
     >
       {content.title && (
-        <div className="mb-1 text-center text-sm text-gray-400">{content.title}</div>
+        <div className="mb-1 text-center text-sm text-gray-400 dark:text-gray-600">
+          {content.title}
+        </div>
       )}
       <div className="text-center">
-        <div className="mb-1 text-6xl font-bold leading-tight text-white">
+        <div className="mb-1 text-6xl font-bold leading-tight text-white dark:text-zinc-900">
           {typeof content.value === 'number' ? content.value.toLocaleString() : content.value}
         </div>
       </div>
       {content.subValue && (
-        <div className="text-center text-xs text-gray-500">{content.subValue}</div>
+        <div className="text-center text-xs text-gray-500 dark:text-gray-600">
+          {content.subValue}
+        </div>
       )}
       <div className="mt-2 flex items-center justify-between">
-        <div className="text-sm capitalize text-gray-400">{content.description ?? 'Events'}</div>
+        <div className="text-sm capitalize text-gray-400 dark:text-gray-600">
+          {content.description ?? 'Events'}
+        </div>
         {content.change && (
           <div className={`text-sm font-medium ${getChangeColor(content.change.value)}`}>
             <span>{getArrow(content.change.value)}</span>
@@ -90,22 +96,22 @@ export const RegionCard: React.FC<RegionCardProps> = ({ data, isSelected, onHove
     switch (level) {
       case 'high':
         return {
-          text: 'text-white group-hover:text-white group-hover:animate-pulse',
-          bg: 'bg-white/20 group-hover:bg-green-500',
+          text: 'text-white dark:text-zinc-900 group-hover:text-white dark:group-hover:text-zinc-900 group-hover:animate-pulse',
+          bg: 'bg-white/20 dark:bg-black/20 group-hover:bg-green-500',
           glow: 'group-hover:shadow-[0_0_30px_#22c55e]',
           boxShadow: 'group-hover:shadow-[0_0_20px_#22c55e]',
         };
       case 'medium':
         return {
-          text: 'text-white group-hover:text-white',
-          bg: 'bg-white/20 group-hover:bg-green-500/60',
+          text: 'text-white dark:text-zinc-900 group-hover:text-white dark:group-hover:text-zinc-900',
+          bg: 'bg-white/20 dark:bg-black/20 group-hover:bg-green-500/60',
           glow: 'group-hover:shadow-[0_0_20px_#22c55e]',
           boxShadow: 'group-hover:shadow-[0_0_10px_#22c55e]',
         };
       default:
         return {
-          text: 'text-white',
-          bg: 'bg-white/20 group-hover:bg-green-500/30',
+          text: 'text-white dark:text-zinc-900',
+          bg: 'bg-white/20 dark:bg-black/20 group-hover:bg-green-500/30',
           glow: 'group-hover:shadow-[0_0_10px_#22c55e]',
           boxShadow: 'group-hover:shadow-[0_0_5px_#22c55e]',
         };
@@ -120,8 +126,8 @@ export const RegionCard: React.FC<RegionCardProps> = ({ data, isSelected, onHove
       onMouseEnter={handleCardHover}
       onMouseLeave={() => onHover(null)}
       className={`relative cursor-pointer rounded-xl p-4 ${
-        isSelected ? 'bg-white/10' : 'bg-white/5'
-      } group transition-colors hover:bg-white/10`}
+        isSelected ? 'bg-white/10 dark:bg-black/10' : 'bg-white/5 dark:bg-black/5'
+      } group transition-colors hover:bg-white/10 dark:hover:bg-black/10`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02 }}
@@ -129,10 +135,10 @@ export const RegionCard: React.FC<RegionCardProps> = ({ data, isSelected, onHove
     >
       <motion.div layout className="mb-4 flex items-start justify-between">
         <div>
-          <motion.h3 layout className="text-lg font-medium text-white">
+          <motion.h3 layout className="text-lg font-medium text-white dark:text-zinc-900">
             {data.region}
           </motion.h3>
-          <motion.p layout className="text-sm text-zinc-400">
+          <motion.p layout className="text-sm text-zinc-400 dark:text-zinc-600">
             {data.blockedIPs} blocked IPs
           </motion.p>
         </div>
@@ -148,7 +154,7 @@ export const RegionCard: React.FC<RegionCardProps> = ({ data, isSelected, onHove
         {data.metrics.map((metric) => (
           <motion.div
             key={metric.id}
-            className={`relative flex-1 bg-white transition-all duration-300 group-hover:bg-green-500 ${riskStyles.glow}`}
+            className={`relative flex-1 bg-white transition-all duration-300 group-hover:bg-green-500 dark:bg-zinc-900 ${riskStyles.glow}`}
             initial={{ height: 0 }}
             animate={{ height: `${(metric.value / 150) * 100}%` }}
             onMouseEnter={(e) => handleMetricHover(metric, e)}
@@ -169,14 +175,16 @@ export const RegionCard: React.FC<RegionCardProps> = ({ data, isSelected, onHove
           className="grid grid-cols-2 gap-4"
         >
           <div>
-            <div className="text-sm text-zinc-400">Failed Attempts</div>
-            <div className="text-lg font-medium text-white">
+            <div className="text-sm text-zinc-400 dark:text-zinc-600">Failed Attempts</div>
+            <div className="text-lg font-medium text-white dark:text-zinc-900">
               {data.failedAttempts.toLocaleString()}
             </div>
           </div>
           <div>
-            <div className="text-sm text-zinc-400">Anomaly Score</div>
-            <div className="text-lg font-medium text-white">{data.anomalyScore.toFixed(1)}</div>
+            <div className="text-sm text-zinc-400 dark:text-zinc-600">Anomaly Score</div>
+            <div className="text-lg font-medium text-white dark:text-zinc-900">
+              {data.anomalyScore.toFixed(1)}
+            </div>
           </div>
         </motion.div>
       )}

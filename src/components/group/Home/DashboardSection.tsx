@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useTheme } from 'next-themes';
 
 import DashboardHeader from '../../DashboardHeader/DashboardHeader';
 import { authStats } from '../../Tooltip/Tooltip';
@@ -12,33 +13,44 @@ import ChartsGrid from '../../VisualDataComponents/ChartsGrid/ChartsGrid';
 
 const DashboardSection: React.FC = () => {
   const [mounted, setMounted] = useState<boolean>(false);
+  const [showComponents, setShowComponents] = useState(true);
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
-        busy loading ....
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (mounted) {
+      setShowComponents(false);
+      const timer = setTimeout(() => setShowComponents(true), 50);
+      return () => clearTimeout(timer);
+    }
+  }, [resolvedTheme, mounted]);
+
+  if (!mounted) return null;
 
   return (
-    <section className="relative w-full py-20">
-      <div className="absolute inset-0 bg-black" style={{ opacity: 0.95 }} />
+    <div className="relative w-full py-20">
+      <div className="absolute inset-0 bg-black dark:bg-white" style={{ opacity: 0.95 }} />
       <div className="relative mx-auto max-w-7xl space-y-16 px-4">
         <DashboardHeader />
-        <StatsGrid stats={authStats} />
-        <ChartsGrid />
+        {showComponents && (
+          <>
+            <StatsGrid stats={authStats} />
+            <ChartsGrid />
+          </>
+        )}
         <div className="mt-16 text-center">
-          <Link href="/signin" className="text-zinc-300 transition-colors hover:text-white">
+          <Link
+            href="/signin"
+            className="text-zinc-300 transition-colors hover:text-white dark:text-zinc-700 dark:hover:text-black"
+          >
             Discover more insights in your full dashboard...
           </Link>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 

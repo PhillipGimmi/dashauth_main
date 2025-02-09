@@ -1,18 +1,39 @@
 // StatsGrid.tsx
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-
 import StatsCard from '../StatsCard/StatsCard';
 import { AuthStat } from '../../Tooltip/Tooltip';
+import { useCardStore } from '../../ThemeToggle/ThemeToggle';
 
 export interface StatsGridProps {
   stats: AuthStat[];
 }
 
 const StatsGrid: React.FC<StatsGridProps> = ({ stats }) => {
+  const [expandedCards, setExpandedCards] = useState<boolean[]>(
+    new Array(stats.length).fill(false)
+  );
+
+  const { onCollapseAll } = useCardStore();
+
+  // Listen for collapse all events
+  useEffect(() => {
+    onCollapseAll(() => {
+      setExpandedCards(new Array(stats.length).fill(false));
+    });
+  }, [onCollapseAll, stats.length]);
+
+  const toggleCard = (index: number) => {
+    setExpandedCards((prev) => {
+      const next = [...prev];
+      next[index] = !next[index];
+      return next;
+    });
+  };
+
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 dark:text-black md:grid-cols-3">
       {stats.map((stat, index) => (
         <motion.div
           key={stat.label}
@@ -23,7 +44,12 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats }) => {
             delay: index * 0.1,
           }}
         >
-          <StatsCard stat={stat} index={index} />
+          <StatsCard
+            stat={stat}
+            index={index}
+            isExpanded={expandedCards[index]}
+            onToggle={() => toggleCard(index)}
+          />
         </motion.div>
       ))}
     </div>

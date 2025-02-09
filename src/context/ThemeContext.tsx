@@ -1,12 +1,14 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import { useTheme as useNextTheme } from 'next-themes';
 
 type Theme = 'light' | 'dark';
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
+  chartsVisible: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -14,6 +16,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { readonly children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('dark');
   const [mounted, setMounted] = useState(false);
+  const [chartsVisible, setChartsVisible] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -39,17 +42,23 @@ export function ThemeProvider({ children }: { readonly children: React.ReactNode
 
   const handleThemeChange = (newTheme: Theme) => {
     if (newTheme !== 'light' && newTheme !== 'dark') return;
+    // First hide charts
+    setChartsVisible(false);
+    // Then change theme
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    // Finally show charts again
+    setTimeout(() => setChartsVisible(true), 50);
   };
 
   const value = useMemo(
     () => ({
       theme,
       setTheme: handleThemeChange,
+      chartsVisible,
     }),
-    [theme]
+    [theme, chartsVisible]
   );
 
   // Return null on server-side or during initial mount
@@ -67,3 +76,17 @@ export const useTheme = () => {
   }
   return context;
 };
+
+// Create a custom hook that combines next-themes with our chartsVisible state
+export function useThemeWithCharts() {
+  const nextTheme = useNextTheme();
+  const [chartsVisible, setChartsVisible] = useState(true);
+
+  const setTheme = (theme: string) => {
+    setChartsVisible(false);
+    nextTheme.setTheme(theme);
+    setTimeout(() => setChartsVisible(true), 50);
+  };
+
+  return { ...nextTheme, chartsVisible, setTheme };
+}

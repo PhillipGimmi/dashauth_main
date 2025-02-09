@@ -39,7 +39,7 @@ const GeographicDistribution: React.FC<GeographicDistributionProps> = ({ data: p
 
   return (
     <section
-      className="relative h-[568px] w-full overflow-hidden rounded-xl bg-white/5 p-6"
+      className="relative h-[568px] w-full overflow-hidden rounded-xl bg-white/5 p-6 dark:bg-black/5"
       aria-label="Security Alerts Dashboard"
       onMouseMove={handleMouseMove}
       onMouseLeave={() => {
@@ -52,7 +52,7 @@ const GeographicDistribution: React.FC<GeographicDistributionProps> = ({ data: p
         onClick={() => setShowGlobal(!showGlobal)}
         onKeyDown={(e) => e.key === 'Enter' && setShowGlobal(!showGlobal)}
       >
-        <motion.h2 className="text-2xl font-medium text-white" layout>
+        <motion.h2 className="text-2xl font-medium text-white dark:text-zinc-900" layout>
           Security Alerts
         </motion.h2>
         <div className="text-sm text-green-500">Last 24h</div>

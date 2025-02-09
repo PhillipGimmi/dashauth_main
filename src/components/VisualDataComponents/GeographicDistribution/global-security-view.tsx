@@ -42,7 +42,7 @@ const GlobalSecurityView: React.FC<GlobalSecurityViewProps> = ({ data, onHover }
       exit={{ opacity: 0 }}
       className="grid gap-6"
     >
-      <div className="mb-4 text-center text-3xl font-bold text-white">
+      <div className="mb-4 text-center text-3xl font-bold text-white dark:text-zinc-900">
         {totalFailedAttempts.toLocaleString()} Failed Attempts
       </div>
 
@@ -53,17 +53,19 @@ const GlobalSecurityView: React.FC<GlobalSecurityViewProps> = ({ data, onHover }
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: index * 0.1 }}
-            className="group rounded-lg bg-white/5 p-4"
+            className="group rounded-lg bg-white/5 p-4 dark:bg-black/5"
             onMouseEnter={(e) => handleReasonHover(reason, e)}
             onMouseLeave={() => onHover(null)}
           >
-            <div className="mb-2 text-sm text-zinc-400">{reason.reason}</div>
-            <div className="text-2xl font-bold text-white">{reason.percentage}%</div>
-            <motion.div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+            <div className="mb-2 text-sm text-zinc-400 dark:text-zinc-600">{reason.reason}</div>
+            <div className="text-2xl font-bold text-white dark:text-zinc-900">
+              {reason.percentage}%
+            </div>
+            <motion.div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10 dark:bg-black/10">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${reason.percentage}%` }}
-                className="h-full rounded-full bg-white group-hover:bg-green-500"
+                className="h-full rounded-full bg-white group-hover:bg-green-500 dark:bg-zinc-900"
               />
             </motion.div>
           </motion.div>
@@ -77,12 +79,12 @@ const GlobalSecurityView: React.FC<GlobalSecurityViewProps> = ({ data, onHover }
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: index * 0.1 }}
-            className="rounded-lg bg-white/5 p-3 text-center"
+            className="rounded-lg bg-white/5 p-3 text-center dark:bg-black/5"
             onMouseEnter={(e) => handleRegionHover(region, e)}
             onMouseLeave={() => onHover(null)}
           >
-            <div className="mb-1 text-sm text-zinc-400">{region.region}</div>
-            <div className="text-lg font-medium text-white">
+            <div className="mb-1 text-sm text-zinc-400 dark:text-zinc-600">{region.region}</div>
+            <div className="text-lg font-medium text-white dark:text-zinc-900">
               {((region.failedAttempts / totalFailedAttempts) * 100).toFixed(1)}%
             </div>
           </motion.div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 
 interface WebGLUniforms {
   u_time: WebGLUniformLocation | null;
@@ -8,6 +9,7 @@ interface WebGLUniforms {
   u_pointer_position: WebGLUniformLocation | null;
   u_pointer_active: WebGLUniformLocation | null;
   u_scroll_progress: WebGLUniformLocation | null;
+  u_is_dark_mode: WebGLUniformLocation | null;
 }
 
 interface PointerState {
@@ -19,6 +21,8 @@ interface PointerState {
 }
 
 export const WebGLBackground = () => {
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pointerRef = useRef<PointerState>({
@@ -52,76 +56,78 @@ export const WebGLBackground = () => {
     `;
 
     const fragmentShader = `
-precision mediump float;
-varying vec2 vUv;
-uniform float u_time;
-uniform float u_ratio;
-uniform vec2 u_pointer_position;
-uniform float u_pointer_active;
-uniform float u_scroll_progress;
+      precision mediump float;
+      varying vec2 vUv;
+      uniform float u_time;
+      uniform float u_ratio;
+      uniform vec2 u_pointer_position;
+      uniform float u_pointer_active;
+      uniform float u_scroll_progress;
+      uniform float u_is_dark_mode;
 
-vec2 rotate(vec2 uv, float th) {
-    return mat2(cos(th), sin(th), -sin(th), cos(th)) * uv;
-}
+      vec2 rotate(vec2 uv, float th) {
+          return mat2(cos(th), sin(th), -sin(th), cos(th)) * uv;
+      }
 
-float neuro_shape(vec2 uv, float t) {
-    vec2 sine_acc = vec2(0.);
-    vec2 res = vec2(0.);
-    float scale = 8.;
-    for (int j = 0; j < 15; j++) {
-        uv = rotate(uv, 1.);
-        sine_acc = rotate(sine_acc, 1.);
-        vec2 layer = uv * scale + float(j) + sine_acc - t;
-        sine_acc += sin(layer);
-        res += (.5 + .5 * cos(layer)) / scale;
-        scale *= 1.2; // Removed p from here
-    }
-    return res.x + res.y;
-}
+      float neuro_shape(vec2 uv, float t) {
+          vec2 sine_acc = vec2(0.);
+          vec2 res = vec2(0.);
+          float scale = 8.;
+          for (int j = 0; j < 15; j++) {
+              uv = rotate(uv, 1.);
+              sine_acc = rotate(sine_acc, 1.);
+              vec2 layer = uv * scale + float(j) + sine_acc - t;
+              sine_acc += sin(layer);
+              res += (.5 + .5 * cos(layer)) / scale;
+              scale *= 1.2;
+          }
+          return res.x + res.y;
+      }
 
-void main() {
-    vec2 uv = .5 * vUv;
-    uv.x *= u_ratio;
-    vec2 pointer = vUv - u_pointer_position;
-    pointer.x *= u_ratio;
+      void main() {
+          vec2 uv = .5 * vUv;
+          uv.x *= u_ratio;
+          vec2 pointer = vUv - u_pointer_position;
+          pointer.x *= u_ratio;
 
-    float dist = length(pointer);
-    float event_horizon = 0.15;
-    float gravity_strength = u_pointer_active * 0.4;
+          float dist = length(pointer);
+          float event_horizon = 0.15;
+          float gravity_strength = u_pointer_active * 0.4;
 
-    vec2 distorted_uv = uv;
-    if (dist > 0.0 && u_pointer_active > 0.0) {
-        vec2 dir = normalize(pointer);
-        float pull = pow(1.0 - smoothstep(0.0, event_horizon, dist), 2.0) * gravity_strength;
-        distorted_uv -= dir * pull * 0.1;
-    }
+          vec2 distorted_uv = uv;
+          if (dist > 0.0 && u_pointer_active > 0.0) {
+              vec2 dir = normalize(pointer);
+              float pull = pow(1.0 - smoothstep(0.0, event_horizon, dist), 2.0) * gravity_strength;
+              distorted_uv -= dir * pull * 0.1;
+          }
 
-    float p = clamp(length(pointer), 0., 1.);
-    p = (1. - p) * u_pointer_active;
+          float p = clamp(length(pointer), 0., 1.);
+          p = (1. - p) * u_pointer_active;
+          distorted_uv += pointer * p * 0.1;
 
-    // Apply p to UV coordinates for distortion
-    distorted_uv += pointer * p * 0.1;
+          float t = .0005 * u_time;
+          vec3 col = vec3(0.);
+          float noise = neuro_shape(distorted_uv, t);
 
-    float t = .0005 * u_time;
-    vec3 color = vec3(0.);
-    float noise = neuro_shape(distorted_uv, t);
+          noise = 1.2 * pow(noise, 3.);
+          noise += pow(noise, 10.);
+          noise = max(.0, noise - .5);
 
-    noise = 1.2 * pow(noise, 3.);
-    noise += pow(noise, 10.);
-    noise = max(.0, noise - .5);
+          float fade_distance = 300.0 / 1200.0;
+          float top_fade = smoothstep(0.0, fade_distance, vUv.y);
+          float bottom_fade = smoothstep(0.0, fade_distance, 1.0 - vUv.y);
+          float edge_fade = top_fade * bottom_fade;
+          noise *= edge_fade;
 
-    float fade_distance = 300.0 / 1200.0;
-    float top_fade = smoothstep(0.0, fade_distance, vUv.y);
-    float bottom_fade = smoothstep(0.0, fade_distance, 1.0 - vUv.y);
-    float edge_fade = top_fade * bottom_fade;
-    noise *= edge_fade;
+          vec3 finalColor = normalize(vec3(1.0)) * noise * 0.6;
+          
+          if (u_is_dark_mode > 0.5) {
+              finalColor = vec3(1.0) - finalColor;
+          }
 
-    color = normalize(vec3(1.0, 1.0, 1.0));
-    color = color * noise;
-
-    gl_FragColor = vec4(color, noise * 0.3);
-}
-
+          float alpha = u_is_dark_mode > 0.5 ? 1.0 : 0.15;
+          gl_FragColor = vec4(finalColor, alpha);
+      }
     `;
 
     const createShader = (source: string, type: number) => {
@@ -149,6 +155,7 @@ void main() {
       u_pointer_position: gl.getUniformLocation(program, 'u_pointer_position'),
       u_pointer_active: gl.getUniformLocation(program, 'u_pointer_active'),
       u_scroll_progress: gl.getUniformLocation(program, 'u_scroll_progress'),
+      u_is_dark_mode: gl.getUniformLocation(program, 'u_is_dark_mode'),
     };
 
     const vertices = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
@@ -211,6 +218,9 @@ void main() {
       if (uniformsRef.current.u_scroll_progress) {
         gl.uniform1f(uniformsRef.current.u_scroll_progress, scrollProgress);
       }
+      if (uniformsRef.current.u_is_dark_mode) {
+        gl.uniform1f(uniformsRef.current.u_is_dark_mode, isDarkMode ? 1.0 : 0.0);
+      }
 
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       animationFrameRef.current = requestAnimationFrame(animate);
@@ -230,7 +240,7 @@ void main() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, []);
+  }, [isDarkMode]);
 
   return (
     <div ref={containerRef} className="pointer-events-none absolute inset-0">

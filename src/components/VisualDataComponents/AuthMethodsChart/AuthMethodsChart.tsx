@@ -53,25 +53,25 @@ const CustomTooltip: React.FC<TooltipProps> = ({ active, payload, label }) => {
         value: Math.abs(change).toFixed(1),
         class: 'text-red-400',
       };
-    return { symbol: '→', value: '0.0', class: 'text-white' };
+    return { symbol: '→', value: '0.0', class: 'text-white dark:text-zinc-900' };
   };
 
   const change = calculateChange(currentValue, previousValue);
 
   return (
-    <div className="w-[220px] rounded-lg border border-zinc-800 bg-[#1A1A1A] p-4 shadow-lg">
-      <div className="mb-1 text-center text-sm text-zinc-400">{label}</div>
+    <div className="w-[220px] rounded-lg border border-zinc-800 bg-[#1A1A1A] p-4 shadow-lg dark:border-zinc-200 dark:bg-white">
+      <div className="mb-1 text-center text-sm text-zinc-400 dark:text-zinc-600">{label}</div>
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         className="text-center"
       >
-        <div className="mb-1 text-6xl font-bold leading-tight text-white">
+        <div className="mb-1 text-6xl font-bold leading-tight text-white dark:text-zinc-900">
           {currentValue.toFixed(1)}%
         </div>
       </motion.div>
       <div className="mt-2 flex items-center justify-between">
-        <div className="text-sm text-zinc-400">Authentication Rate</div>
+        <div className="text-sm text-zinc-400 dark:text-zinc-600">Authentication Rate</div>
         <div className={`text-sm font-medium ${change.class} flex items-center gap-1`}>
           <span>{change.symbol}</span>
           <span>{change.value}%</span>
@@ -103,7 +103,7 @@ const formatHour = (hour: string) => {
 const AuthMethodsChart: React.FC<AuthMethodsChartProps> = ({
   data,
   primaryColor = '#22C55E',
-  secondaryColor = '#9CA3AF',
+  secondaryColor = 'var(--chart-secondary-color, #9CA3AF)',
 }) => {
   const authMethods: AuthMethod[] = useMemo(
     () =>
@@ -129,13 +129,13 @@ const AuthMethodsChart: React.FC<AuthMethodsChartProps> = ({
   }, [selectedData]);
 
   return (
-    <section className="flex h-[568px] w-full flex-col rounded-xl bg-white/5 p-6">
+    <section className="flex h-[568px] w-full flex-col rounded-xl bg-white/5 p-6 dark:bg-black/5">
       <div className="mb-8 flex items-center justify-between">
         <motion.h2
           key={selectedData?.name}
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          className="text-2xl font-medium text-white"
+          className="text-2xl font-medium text-white dark:text-zinc-900"
         >
           {selectedData?.name}
         </motion.h2>
@@ -190,13 +190,17 @@ const AuthMethodsChart: React.FC<AuthMethodsChartProps> = ({
             key={method.id}
             onClick={() => setSelectedMethod(method.id)}
             className={`flex flex-col items-center justify-center rounded-lg p-4 transition-colors ${
-              selectedMethod === method.id ? 'bg-white/10' : 'hover:bg-white/5'
+              selectedMethod === method.id
+                ? 'bg-white/10 dark:bg-black/10'
+                : 'hover:bg-white/5 dark:hover:bg-black/5'
             }`}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <span className="mb-2 text-lg text-white">{method.name}</span>
-            <motion.span className="text-2xl font-bold">{method.value.toFixed(1)}%</motion.span>
+            <span className="mb-2 text-lg text-white dark:text-zinc-900">{method.name}</span>
+            <motion.span className="text-2xl font-bold dark:text-zinc-900">
+              {method.value.toFixed(1)}%
+            </motion.span>
           </motion.button>
         ))}
       </div>
