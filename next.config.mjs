@@ -8,10 +8,13 @@ const nextConfig = {
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
+      // Handle punycode deprecation
       config.resolve.fallback = {
         ...config.resolve.fallback,
         punycode: false,
       };
+      // Ignore punycode warnings
+      config.ignoreWarnings = [{ module: /node_modules\/punycode/ }];
     }
     return config;
   },

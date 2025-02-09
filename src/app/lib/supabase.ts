@@ -43,6 +43,11 @@ const hasLocalStorage = () => {
   }
 };
 
+// Add environment variable validation
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error('Missing required Supabase environment variables');
+}
+
 // Create a single supabase client for interacting with your database
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {

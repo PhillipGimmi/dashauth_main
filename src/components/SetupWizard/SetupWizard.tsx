@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import PlatformStep from './steps/2PlatformStep/PlatformStep';
 import { SetupStep } from './steps/3SetupStep/SetupStep';
 import { CustomizationStep } from './steps/4CustomizationStep/CustomizationStep';
-import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
+import EclipseToggle from '../ThemeToggle/ThemeToggle';
 import DomainStepWrapper from './steps/1DomainStep/DomainStepWrapper';
 import { ProgressBar } from '../ProgressBar/ProgressBar';
 import { SETUP_OPTIONS } from '@/constants/constants';
@@ -285,7 +285,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
             transition={{ duration: 0.3 }}
             className="relative w-full max-w-4xl"
           >
-            <ThemeToggle />
+            <EclipseToggle />
 
             {error && (
               <div className="mb-4 flex flex-col gap-3 rounded-lg border border-red-500/20 bg-red-500/10 p-4">
